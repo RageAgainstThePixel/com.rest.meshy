@@ -1,8 +1,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Meshy.Account;
 using Meshy.TextToTexture;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using Utilities.WebRequestRest;
@@ -22,7 +22,6 @@ namespace Meshy
         public MeshyClient(MeshyAuthentication authentication = null, MeshySettings settings = null)
             : base(authentication ?? MeshyAuthentication.Default, settings ?? MeshySettings.Default)
         {
-            AccountEndpoint = new AccountEndpoint(this);
             TextToTextureEndpoint = new TextToTextureEndpoint(this);
         }
 
@@ -57,11 +56,6 @@ namespace Meshy
             DefaultValueHandling = DefaultValueHandling.Ignore,
             NullValueHandling = NullValueHandling.Ignore
         };
-
-        /// <summary>
-        /// Get information about your meshy account.
-        /// </summary>
-        public AccountEndpoint AccountEndpoint { get; }
 
         /// <summary>
         /// Quickly generate high-quality textures for your existing 3D models using text prompts and concept art.

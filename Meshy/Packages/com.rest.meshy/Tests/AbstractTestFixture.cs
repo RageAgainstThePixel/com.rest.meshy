@@ -10,8 +10,10 @@ namespace Meshy.Tests
         {
             var auth = new MeshyAuthentication().LoadDefaultsReversed();
             var settings = new MeshySettings();
-            MeshyClient = new MeshyClient(auth, settings);
-            MeshyClient.EnableDebug = true;
+            MeshyClient = new MeshyClient(auth, settings)
+            {
+                EnableDebug = true
+            };
         }
     }
 }

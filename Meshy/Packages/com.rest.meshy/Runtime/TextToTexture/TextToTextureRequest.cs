@@ -1,6 +1,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using GLTFast.Export;
 using Newtonsoft.Json;
+using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace Meshy.TextToTexture
@@ -8,6 +10,50 @@ namespace Meshy.TextToTexture
     [Preserve]
     public sealed class TextToTextureRequest
     {
+        [Preserve]
+        public TextToTextureRequest(
+            GameObject model,
+            string objectPrompt,
+            string stylePrompt,
+            bool? enableOriginalUV = true,
+            bool? enablePBR = true,
+            string negativePrompt = null,
+            string resolution = null,
+            string artStyle = null)
+            : this(string.Empty,
+                objectPrompt,
+                stylePrompt,
+                enableOriginalUV,
+                enablePBR,
+                negativePrompt,
+                resolution,
+                artStyle)
+        {
+            Model = model;
+        }
+
+        [Preserve]
+        public TextToTextureRequest(
+            GameObjectExport glbExport,
+            string objectPrompt,
+            string stylePrompt,
+            bool? enableOriginalUV = true,
+            bool? enablePBR = true,
+            string negativePrompt = null,
+            string resolution = null,
+            string artStyle = null)
+            : this(string.Empty,
+                objectPrompt,
+                stylePrompt,
+                enableOriginalUV,
+                enablePBR,
+                negativePrompt,
+                resolution,
+                artStyle)
+        {
+            GlbExport = glbExport;
+        }
+
         [Preserve]
         [JsonConstructor]
         public TextToTextureRequest(
@@ -29,6 +75,14 @@ namespace Meshy.TextToTexture
             Resolution = resolution;
             ArtStyle = artStyle;
         }
+
+        [Preserve]
+        [JsonIgnore]
+        public GameObject Model { get; }
+
+        [Preserve]
+        [JsonIgnore]
+        public GameObjectExport GlbExport { get; internal set; }
 
         /// <summary>
         /// Downloadable URL to the 3D model for Meshy to texture.

@@ -5,12 +5,12 @@
   "keywords": [],
   "version": "1.0.0-preview.1",
   "unity": "2021.3",
-  "documentationUrl": "https://github.com/StephenHodgson/com.rest.meshy#documentation",
-  "changelogUrl": "https://github.com/StephenHodgson/com.rest.meshy/releases",
+  "documentationUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy#documentation",
+  "changelogUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy/releases",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "repository": "https://github.com/StephenHodgson/com.rest.meshy.git"
+    "repository": "https://github.com/RageAgainstThePixel/com.rest.meshy.git"
   },
   "author": {
     "name": "StephenHodgson",
