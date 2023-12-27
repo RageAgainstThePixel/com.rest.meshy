@@ -1,0 +1,20 @@
+{
+    "name": "Meshy.Editor",
+    "rootNamespace": "Meshy.Editor",
+    "references": [
+        "GUID:a62ef45189846ae41a28b8faca89ff81",
+        "GUID:7958db66189566541a6363568aee1575",
+        "GUID:28b599e4adde9c94a9b9667d7b08fe83"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
