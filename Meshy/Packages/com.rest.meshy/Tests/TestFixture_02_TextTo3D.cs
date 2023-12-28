@@ -1,6 +1,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Meshy.TextTo3D;
 using NUnit.Framework;
+using System;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -19,6 +21,15 @@ namespace Meshy.Tests
             {
                 Debug.Log($"{meshyTask.Id} | created_at: {meshyTask.CreatedAt}");
             }
+        }
+
+        [Test]
+        public async Task Test_02_CreateTextTo3DTask()
+        {
+            Assert.IsNotNull(MeshyClient.TextTo3DEndpoint);
+            var request = new TextTo3DRequest("Lantern", "game assets", resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+            var taskResult = await MeshyClient.TextTo3DEndpoint.CreateTextTo3DTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+            Assert.IsNotNull(taskResult);
         }
     }
 }

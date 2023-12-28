@@ -110,33 +110,7 @@ namespace Meshy.TextToTexture
                 throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}");
             }
 
-            return await CheckTaskProgressAsync();
-
-            async Task<MeshyTaskResult> CheckTaskProgressAsync()
-            {
-                var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
-
-                if (taskResult == null)
-                {
-                    throw new Exception($"Failed to get a valid {nameof(taskResult)} for task \"{taskId}\"!");
-                }
-
-                progress?.Report(taskResult);
-
-                switch (taskResult.Status)
-                {
-                    case Status.Pending:
-                    case Status.InProgress:
-                        await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
-                        return await CheckTaskProgressAsync();
-                    case Status.Succeeded:
-                    case Status.Failed:
-                    case Status.Expired:
-                        return taskResult;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            return await PollTaskProgressAsync(taskId, progress, cancellationToken);
         }
     }
 }

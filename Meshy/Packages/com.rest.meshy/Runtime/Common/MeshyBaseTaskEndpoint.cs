@@ -1,6 +1,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,16 +56,49 @@ namespace Meshy
         }
 
         /// <summary>
-        /// This endpoint allows you to retrieve a task by its id.
+        /// Retrieve a task by its id.
         /// </summary>
-        /// <param name="id">Id of the task.</param>
+        /// <param name="taskId">Id of the task.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="MeshyTaskResult"/></returns>
-        public async Task<MeshyTaskResult> RetrieveTaskAsync(string id, CancellationToken cancellationToken = default)
+        public async Task<MeshyTaskResult> RetrieveTaskAsync(string taskId, CancellationToken cancellationToken = default)
         {
-            var response = await Rest.GetAsync(GetUrl($"/{id}"), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+            var response = await Rest.GetAsync(GetUrl($"/{taskId}"), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             response.Validate(EnableDebug);
             return JsonConvert.DeserializeObject<MeshyTaskResult>(response.Body, MeshyClient.JsonSerializationOptions);
+        }
+
+        /// <summary>
+        /// Polls the task progress until it succeeds, fails, or expires.
+        /// </summary>
+        /// <param name="taskId">Task id.</param>
+        /// <param name="progress">Optional, <see cref="IProgress{TaskProgress}"/>.</param>
+        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
+        /// <returns><see cref="MeshyTaskResult"/>.</returns>
+        internal async Task<MeshyTaskResult> PollTaskProgressAsync(string taskId, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
+        {
+            var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
+
+            if (taskResult == null)
+            {
+                throw new Exception($"Failed to get a valid {nameof(taskResult)} for task \"{taskId}\"!");
+            }
+
+            progress?.Report(taskResult);
+
+            switch (taskResult.Status)
+            {
+                case Status.Pending:
+                case Status.InProgress:
+                    await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
+                    return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+                case Status.Succeeded:
+                case Status.Failed:
+                case Status.Expired:
+                    return taskResult;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }
