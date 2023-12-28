@@ -1,8 +1,9 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Meshy.ImageTo3D;
+using Meshy.TextTo3D;
 using Meshy.TextToTexture;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System.Collections.Generic;
 using System.Security.Authentication;
 using Utilities.WebRequestRest;
@@ -23,6 +24,8 @@ namespace Meshy
             : base(authentication ?? MeshyAuthentication.Default, settings ?? MeshySettings.Default)
         {
             TextToTextureEndpoint = new TextToTextureEndpoint(this);
+            TextTo3DEndpoint = new TextTo3DEndpoint(this);
+            ImageTo3DEndpoint = new ImageTo3DEndpoint(this);
         }
 
         protected override void ValidateAuthentication()
@@ -61,5 +64,15 @@ namespace Meshy
         /// Quickly generate high-quality textures for your existing 3D models using text prompts and concept art.
         /// </summary>
         public TextToTextureEndpoint TextToTextureEndpoint { get; }
+
+        /// <summary>
+        /// Quickly generate high-quality 3d models using text prompts.
+        /// </summary>
+        public TextTo3DEndpoint TextTo3DEndpoint { get; }
+
+        /// <summary>
+        /// Quickly generate high-quality 3d models based on concept art.
+        /// </summary>
+        public ImageTo3DEndpoint ImageTo3DEndpoint { get; }
     }
 }

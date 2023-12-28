@@ -15,17 +15,19 @@ namespace Meshy.TextToTexture
     /// <summary>
     /// Quickly generate high-quality textures for your existing 3D models using text prompts and concept art.
     /// </summary>
-    public sealed class TextToTextureEndpoint : MeshyTaskEndpoint
+    public sealed class TextToTextureEndpoint : MeshyBaseTaskEndpoint
     {
         public TextToTextureEndpoint(MeshyClient client) : base(client) { }
 
         protected override string Root => "text-to-texture";
 
         /// <summary>
-        /// This endpoint allows you to create a new Text to Texture task.
+        /// Creates a new text to texture task.
         /// </summary>
-        /// <returns>Job id.</returns>
-        public async Task CreateTextToTextureTaskAsync(TextToTextureRequest request, CancellationToken cancellationToken = default)
+        /// <param name="request"><see cref="TextToTextureRequest"/>.</param>
+        /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
+        /// <returns>Task Id.</returns>
+        public async Task<string> CreateTextToTextureTaskAsync(TextToTextureRequest request, CancellationToken cancellationToken = default)
         {
             Response response;
 
@@ -100,6 +102,7 @@ namespace Meshy.TextToTexture
             }
 
             response.Validate(EnableDebug);
+            return JsonConvert.DeserializeObject<TaskResponse>(response.Body, MeshyClient.JsonSerializationOptions)?.Result;
         }
     }
 }

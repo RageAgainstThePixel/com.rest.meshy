@@ -8,9 +8,9 @@ using Utilities.WebRequestRest;
 
 namespace Meshy
 {
-    public abstract class MeshyTaskEndpoint : MeshyBaseEndpoint
+    public abstract class MeshyBaseTaskEndpoint : MeshyBaseEndpoint
     {
-        protected MeshyTaskEndpoint(MeshyClient client) : base(client) { }
+        protected MeshyBaseTaskEndpoint(MeshyClient client) : base(client) { }
 
         /// <summary>
         /// List all of the tasks for this endpoint.
