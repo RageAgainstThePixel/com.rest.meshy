@@ -21,7 +21,7 @@
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.utilities.rest": "2.4.0",
+    "com.utilities.rest": "2.4.2",
     "com.unity.cloud.gltfast": "6.0.1"
   }
 }

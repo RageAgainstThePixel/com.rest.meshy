@@ -80,7 +80,7 @@ You can create a new one by using the context menu of the project pane and creat
 
 :warning: Beware checking this file into source control, as other people will be able to see your API key.
 
-![Create new MeshyConfiguration](Meshy/Packages/com.rest.meshy/Documentation~/images/create-scriptable-object.png)
+![Create new MeshyConfiguration](images/create-scriptable-object.png)
 
 #### Load key from configuration file
 
