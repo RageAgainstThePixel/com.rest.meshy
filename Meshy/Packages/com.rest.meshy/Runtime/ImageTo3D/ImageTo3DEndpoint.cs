@@ -5,6 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using Utilities.WebRequestRest;
 
 namespace Meshy.ImageTo3D
@@ -37,7 +38,7 @@ namespace Meshy.ImageTo3D
             else
             {
                 var form = new WWWForm();
-                form.AddBinaryData("image_file", request.Image.EncodeToPNG(), $"{request.Image.name}.png", "multipart/form-data");
+                form.AddBinaryData("image_file", request.Image.EncodeToPNG(), $"{UnityWebRequest.EscapeURL(request.Image.name)}.png", "multipart/form-data");
 
                 if (request.EnablePBR.HasValue)
                 {

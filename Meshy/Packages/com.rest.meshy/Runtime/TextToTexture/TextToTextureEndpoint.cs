@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using Utilities.WebRequestRest;
 
 namespace Meshy.TextToTexture
@@ -65,7 +66,7 @@ namespace Meshy.TextToTexture
                     throw new Exception($"Failed to export {request.Model.name} to .glb!");
                 }
 
-                form.AddBinaryData("model_file", glbStream.ToArray(), $"{request.Model.name}.glb", "multipart/form-data");
+                form.AddBinaryData("model_file", glbStream.ToArray(), $"{UnityWebRequest.EscapeURL(request.Model.name)}.glb", "multipart/form-data");
                 form.AddField("object_prompt", request.ObjectPrompt);
                 form.AddField("style_prompt", request.StylePrompt);
 

@@ -26,7 +26,7 @@ namespace Meshy
         /// <param name="order">Optional, <see cref="SortOrder"/>.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="IReadOnlyList{MeshyTaskResult}"/>.</returns>
-        public async Task<IReadOnlyList<MeshyTaskResult>> ListTasksAsync(int? pageNumber = null, int? pageSize = null, SortOrder order = SortOrder.Descending, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<MeshyTaskResult>> ListTasksAsync(int? pageNumber = null, int? pageSize = null, SortOrder? order = null, CancellationToken cancellationToken = default)
         {
             var query = new Dictionary<string, string>();
 
@@ -40,14 +40,17 @@ namespace Meshy
                 query.Add("pageSize", pageSize.Value.ToString());
             }
 
-            switch (order)
+            if (order.HasValue)
             {
-                case SortOrder.Ascending:
-                    query.Add("sortBy", "+created_at");
-                    break;
-                case SortOrder.Descending:
-                    query.Add("sortBy", "-created_at");
-                    break;
+                switch (order)
+                {
+                    case SortOrder.Ascending:
+                        query.Add("sortBy", "+created_at");
+                        break;
+                    case SortOrder.Descending:
+                        query.Add("sortBy", "-created_at");
+                        break;
+                }
             }
 
             var response = await Rest.GetAsync(GetUrl(queryParameters: query), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
