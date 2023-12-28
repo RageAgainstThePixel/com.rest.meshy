@@ -2,6 +2,7 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using UnityEngine.Scripting;
 
 namespace Meshy
@@ -26,8 +27,8 @@ namespace Meshy
             [JsonProperty("finished_at")] long finishedAtUnitTimeMilliseconds,
             [JsonProperty("status")] Status status,
             [JsonProperty("task_error")] Error error,
-            [JsonProperty("texture_urls")] TextureUrls textureUrls,
-            [JsonProperty("preceding_tasks")] int? precedingJobs)
+            [JsonProperty("texture_urls")] List<TextureUrl> textureUrls,
+            [JsonProperty("preceding_tasks")] int? precedingTasks)
         {
             Id = id;
             ModelUrls = modelUrls;
@@ -44,7 +45,7 @@ namespace Meshy
             Status = status;
             Error = error;
             TextureUrls = textureUrls;
-            PrecedingJobs = precedingJobs;
+            PrecedingTasks = precedingTasks;
         }
 
         /// <summary>
@@ -173,14 +174,14 @@ namespace Meshy
         /// </summary>
         [Preserve]
         [JsonProperty("texture_urls")]
-        public TextureUrls TextureUrls { get; }
+        public IReadOnlyList<TextureUrl> TextureUrls { get; }
 
         /// <summary>
         /// The count of preceding jobs.
         /// </summary>
         [Preserve]
         [JsonProperty("preceding_tasks")]
-        public int? PrecedingJobs { get; }
+        public int? PrecedingTasks { get; }
 
         [Preserve]
         public static implicit operator string(MeshyTaskResult result) => result?.ToString();

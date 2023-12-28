@@ -2,9 +2,10 @@
     "name": "Meshy.Tests",
     "rootNamespace": "Meshy.Tests",
     "references": [
+        "glTFast.Export",
+        "Meshy",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Meshy",
         "Utilities.Rest"
     ],
     "includePlatforms": [

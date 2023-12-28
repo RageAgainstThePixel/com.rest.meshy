@@ -6,16 +6,20 @@ using UnityEngine.Scripting;
 namespace Meshy
 {
     [Preserve]
-    public sealed class TextureUrls
+    public sealed class TextureUrl
     {
         [Preserve]
         [JsonConstructor]
-        public TextureUrls(
+        public TextureUrl(
             [JsonProperty("base_color")] string baseColor,
             [JsonProperty("metallic")] string metallic,
             [JsonProperty("normal")] string normal,
             [JsonProperty("roughness")] string roughness)
         {
+            BaseColor = baseColor;
+            Metallic = metallic;
+            Normal = normal;
+            Roughness = roughness;
         }
 
         /// <summary>

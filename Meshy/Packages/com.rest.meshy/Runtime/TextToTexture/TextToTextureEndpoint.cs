@@ -25,9 +25,10 @@ namespace Meshy.TextToTexture
         /// Creates a new text to texture task.
         /// </summary>
         /// <param name="request"><see cref="TextToTextureRequest"/>.</param>
+        /// <param name="progress">Optional, <see cref="IProgress{TaskProgress}"/> callback.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
-        /// <returns>Task Id.</returns>
-        public async Task<string> CreateTextToTextureTaskAsync(TextToTextureRequest request, CancellationToken cancellationToken = default)
+        /// <returns><see cref="MeshyTaskResult"/>.</returns>
+        public async Task<MeshyTaskResult> CreateTextToTextureTaskAsync(TextToTextureRequest request, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
         {
             Response response;
 
@@ -64,7 +65,7 @@ namespace Meshy.TextToTexture
                     throw new Exception($"Failed to export {request.Model.name} to .glb!");
                 }
 
-                form.AddBinaryData("model_file", glbStream.ToArray(), $"{request.Model.name}.glb", "model/gltf-binary");
+                form.AddBinaryData("model_file", glbStream.ToArray(), $"{request.Model.name}.glb", "multipart/form-data");
                 form.AddField("object_prompt", request.ObjectPrompt);
                 form.AddField("style_prompt", request.StylePrompt);
 
@@ -102,7 +103,40 @@ namespace Meshy.TextToTexture
             }
 
             response.Validate(EnableDebug);
-            return JsonConvert.DeserializeObject<TaskResponse>(response.Body, MeshyClient.JsonSerializationOptions)?.Result;
+            var taskId = JsonConvert.DeserializeObject<TaskResponse>(response.Body, MeshyClient.JsonSerializationOptions)?.Result;
+
+            if (string.IsNullOrWhiteSpace(taskId))
+            {
+                throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}");
+            }
+
+            return await CheckTaskProgressAsync();
+
+            async Task<MeshyTaskResult> CheckTaskProgressAsync()
+            {
+                var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
+
+                if (taskResult == null)
+                {
+                    throw new Exception($"Failed to get a valid {nameof(taskResult)} for task \"{taskId}\"!");
+                }
+
+                progress?.Report(taskResult);
+
+                switch (taskResult.Status)
+                {
+                    case Status.Pending:
+                    case Status.InProgress:
+                        await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
+                        return await CheckTaskProgressAsync();
+                    case Status.Succeeded:
+                    case Status.Failed:
+                    case Status.Expired:
+                        return taskResult;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
         }
     }
 }

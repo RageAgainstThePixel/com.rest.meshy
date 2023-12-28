@@ -2,6 +2,9 @@
 
 namespace Meshy.ImageTo3D
 {
+    /// <summary>
+    /// Quickly generate high-quality 3d models based on concept art.
+    /// </summary>
     public class ImageTo3DEndpoint : MeshyBaseTaskEndpoint
     {
         public ImageTo3DEndpoint(MeshyClient client) : base(client) { }

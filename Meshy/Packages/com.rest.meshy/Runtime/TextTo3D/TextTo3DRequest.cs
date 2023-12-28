@@ -66,10 +66,13 @@ namespace Meshy.TextTo3D
         /// <summary>
         /// Describe your desired art style of the object.
         /// Default to realistic if not specified.
-        /// Available values: realistic, fake-3d-cartoon,
+        /// Available values: realistic, voxel, fake-3d-cartoon,
         /// japanese-anime, cartoon-line-art, realistic-hand-drawn,
-        /// fake-3d-hand-drawn, oriental-comic-ink
+        /// fake-3d-hand-drawn, oriental-comic-ink.
         /// </summary>
+        /// <remarks>
+        /// If art_style is set to voxel, enable_pbr will always be false regardless of the provided value.
+        /// </remarks>
         [Preserve]
         [JsonProperty("art_style")]
         public string ArtStyle { get; }

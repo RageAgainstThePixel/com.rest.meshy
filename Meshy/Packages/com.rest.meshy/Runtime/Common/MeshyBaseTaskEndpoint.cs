@@ -13,6 +13,11 @@ namespace Meshy
         protected MeshyBaseTaskEndpoint(MeshyClient client) : base(client) { }
 
         /// <summary>
+        /// The polling interval to check pending or in progress task statuses.
+        /// </summary>
+        public int PollingIntervalMilliseconds { get; set; } = 500;
+
+        /// <summary>
         /// List all of the tasks for this endpoint.
         /// </summary>
         /// <param name="pageNumber">Optional, page number.</param>
@@ -55,7 +60,7 @@ namespace Meshy
         /// <param name="id">Id of the task.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="MeshyTaskResult"/></returns>
-        public async Task<MeshyTaskResult> RetrieveTextToTextureTaskAsync(string id, CancellationToken cancellationToken = default)
+        public async Task<MeshyTaskResult> RetrieveTaskAsync(string id, CancellationToken cancellationToken = default)
         {
             var response = await Rest.GetAsync(GetUrl($"/{id}"), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             response.Validate(EnableDebug);
