@@ -11,7 +11,7 @@ using Utilities.WebRequestRest;
 namespace Meshy.ImageTo3D
 {
     /// <summary>
-    /// Quickly generate high-quality 3d models based on concept art.
+    /// Quickly transform your 2D images into stunning 3D models and bring your visuals to life.
     /// </summary>
     public class ImageTo3DEndpoint : MeshyBaseTaskEndpoint
     {

@@ -66,12 +66,12 @@ namespace Meshy
         public TextToTextureEndpoint TextToTextureEndpoint { get; }
 
         /// <summary>
-        /// Quickly generate high-quality 3d models using text prompts.
+        /// Quickly generate impressive 3D models using text prompts.
         /// </summary>
         public TextTo3DEndpoint TextTo3DEndpoint { get; }
 
         /// <summary>
-        /// Quickly generate high-quality 3d models based on concept art.
+        /// Quickly transform your 2D images into stunning 3D models and bring your visuals to life.
         /// </summary>
         public ImageTo3DEndpoint ImageTo3DEndpoint { get; }
     }

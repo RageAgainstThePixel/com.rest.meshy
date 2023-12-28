@@ -9,7 +9,7 @@ using Utilities.WebRequestRest;
 namespace Meshy.TextTo3D
 {
     /// <summary>
-    /// Quickly generate high-quality 3d models using text prompts.
+    /// Quickly generate impressive 3D models using text prompts.
     /// </summary>
     public class TextTo3DEndpoint : MeshyBaseTaskEndpoint
     {

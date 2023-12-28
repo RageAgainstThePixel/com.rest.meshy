@@ -28,14 +28,14 @@ namespace Meshy.ImageTo3D
 
         [Preserve]
         [JsonIgnore]
-        public Texture2D Image { get; }
+        public Texture2D Image { get; internal set; }
 
         [Preserve]
         [JsonProperty("image_url")]
-        public string ImageUrl { get; }
+        public string ImageUrl { get; internal set; }
 
         [Preserve]
         [JsonProperty("enable_pbr")]
-        public bool? EnablePBR { get; }
+        public bool? EnablePBR { get; internal set; }
     }
 }
