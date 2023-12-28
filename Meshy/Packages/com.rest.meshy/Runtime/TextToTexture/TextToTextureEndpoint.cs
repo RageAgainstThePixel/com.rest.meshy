@@ -50,7 +50,7 @@ namespace Meshy.TextToTexture
                     request.GlbExport = new GameObjectExport(exportSettings, gameObjectExportSettings);
                     var position = request.Model.transform.position;
                     var rotation = request.Model.transform.rotation;
-                    // reset object pose for export.
+                    // reset object pose for export from scene origin.
                     request.Model.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
                     request.GlbExport.AddScene(new[] { request.Model });
                     // put object back where it belongs after export.

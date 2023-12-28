@@ -4,6 +4,7 @@ using Meshy.TextToTexture;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 
 namespace Meshy.Tests
@@ -30,6 +31,17 @@ namespace Meshy.Tests
         {
             Assert.IsNotNull(MeshyClient.TextToTextureEndpoint);
             var request = new TextToTextureRequest(testGlbUrl, "Lantern", "game assets", resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+            var taskResult = await MeshyClient.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+            Assert.IsNotNull(taskResult);
+        }
+
+        [Test]
+        public async Task Test_02_02_CreateTextToTextureTask_Prefab()
+        {
+            Assert.IsNotNull(MeshyClient.TextToTextureEndpoint);
+            var assetPath = AssetDatabase.GUIDToAssetPath("eeb12f5b14a32694a84aa89d0728bf0f");
+            var spherePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            var request = new TextToTextureRequest(spherePrefab, "Basketball", "game assets", resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
             var taskResult = await MeshyClient.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
             Assert.IsNotNull(taskResult);
         }
