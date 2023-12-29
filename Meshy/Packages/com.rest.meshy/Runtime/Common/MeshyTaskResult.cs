@@ -3,7 +3,11 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Scripting;
+using Utilities.WebRequestRest;
 
 namespace Meshy
 {
@@ -99,6 +103,10 @@ namespace Meshy
         [JsonProperty("thumbnail_url")]
         public string ThumbnailUrl { get; }
 
+        [Preserve]
+        [JsonIgnore]
+        public Texture2D Thumbnail { get; private set; }
+
         /// <summary>
         /// Progress of the task. If the task is not started yet, this property will be 0.
         /// Once the task has succeeded, this will become 100.
@@ -188,5 +196,16 @@ namespace Meshy
 
         [Preserve]
         public override string ToString() => Id;
+
+        [Preserve]
+        public async Task<Texture2D> LoadThumbnailAsync(bool enableDebug = false, CancellationToken cancellationToken = default)
+        {
+            if (Thumbnail == null)
+            {
+                Thumbnail = await Rest.DownloadTextureAsync(ThumbnailUrl, fileName: $"{Id}.png", debug: enableDebug, cancellationToken: cancellationToken);
+            }
+
+            return Thumbnail;
+        }
     }
 }
