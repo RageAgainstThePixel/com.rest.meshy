@@ -6,6 +6,7 @@ using Meshy.TextToTexture;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -282,7 +283,8 @@ namespace Meshy.Editor
             }
 
             artStyleSelection = EditorGUILayout.Popup("Art Style", artStyleSelection, ArtStyles.TextToImageArtStyles);
-            textToTextureRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textToTextureRequest.EnablePBR!.Value);
+            textToTextureRequest.EnableOriginalUV = EditorGUILayout.ToggleLeft("use Original UVs", textToTextureRequest.EnableOriginalUV ?? true);
+            textToTextureRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textToTextureRequest.EnablePBR ?? true);
 
             var resolutionSelection = 0;
 
@@ -524,7 +526,7 @@ namespace Meshy.Editor
             }
 
             artStyleSelection = EditorGUILayout.Popup("Art Style", artStyleSelection, ArtStyles.TextToImageArtStyles);
-            textTo3DRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textTo3DRequest.EnablePBR!.Value);
+            textTo3DRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textTo3DRequest.EnablePBR ?? true);
 
             var resolutionSelection = 0;
 
@@ -743,7 +745,7 @@ namespace Meshy.Editor
             EditorGUI.BeginChangeCheck();
             // TODO add texture field when api supports it.
             imageTo3DRequest.ImageUrl = EditorGUILayout.DelayedTextField("Image Url", imageTo3DRequest.ImageUrl);
-            imageTo3DRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", imageTo3DRequest.EnablePBR!.Value);
+            imageTo3DRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", imageTo3DRequest.EnablePBR ?? true);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -911,7 +913,10 @@ namespace Meshy.Editor
 
             if (GUILayout.Button(downloadContent, defaultColumnWidthOption))
             {
-                // TODO
+                EditorApplication.delayCall += () =>
+                {
+                    DownloadTaskAssets(meshyTask);
+                };
             }
 
             EditorGUILayout.EndHorizontal();
@@ -969,5 +974,58 @@ namespace Meshy.Editor
             EditorGUILayout.EndVertical();
             EditorGUILayoutExtensions.Divider();
         }
+
+        private static async void DownloadTaskAssets(MeshyTaskResult meshyTask)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(meshyTask.ModelUrls.Glb))
+                {
+                    throw new MissingReferenceException("Failed to find a valid model url!");
+                }
+
+                var cachedPath = await Rest.DownloadFileAsync(meshyTask.ModelUrls.Glb, fileName: $"{meshyTask.Id}.glb", debug: false);
+                cachedPath = cachedPath.Replace("file://", string.Empty);
+
+                Debug.Log(cachedPath);
+
+                if (!File.Exists(cachedPath))
+                {
+                    throw new MissingReferenceException("Failed to download model!");
+                }
+
+                if (!Directory.Exists(editorDownloadDirectory))
+                {
+                    Directory.CreateDirectory(editorDownloadDirectory);
+                }
+
+                var shallowPath = cachedPath
+                    .Replace(Rest.DownloadCacheDirectory.Replace("/", "\\"), string.Empty);
+                Debug.Log(shallowPath);
+                var importPath = $"{editorDownloadDirectory}{shallowPath}";
+                Debug.Log(importPath);
+                if (File.Exists(importPath)) { return; }
+                File.Copy(cachedPath, importPath);
+                importPath = GetLocalPath(importPath);
+                AssetDatabase.ImportAsset(importPath, ImportAssetOptions.ForceUpdate);
+                var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(importPath);
+
+                if (asset == null)
+                {
+                    Debug.LogError($"Failed to import asset at {importPath}");
+                    return;
+                }
+
+                EditorGUIUtility.PingObject(asset);
+                Selection.activeObject = asset;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+
+        private static string GetLocalPath(string path)
+            => path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
     }
 }
