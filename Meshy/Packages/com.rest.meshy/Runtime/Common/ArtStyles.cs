@@ -46,5 +46,28 @@ namespace Meshy
         /// Oriental Comic Ink style.
         /// </summary>
         public const string OrientalComicInk = "oriental-comic-ink";
+
+        internal static readonly string[] TextToImageArtStyles =
+        {
+            Realistic,
+            Fake3DCartoon,
+            JapaneseAnime,
+            CartoonLineArt,
+            RealisticHandDrawn,
+            Fake3DHandDrawn,
+            OrientalComicInk
+        };
+
+        internal static readonly string[] TextTo3DArtStyles =
+        {
+            Realistic,
+            Voxel,
+            Fake3DCartoon,
+            JapaneseAnime,
+            CartoonLineArt,
+            RealisticHandDrawn,
+            Fake3DHandDrawn,
+            OrientalComicInk
+        };
     }
 }

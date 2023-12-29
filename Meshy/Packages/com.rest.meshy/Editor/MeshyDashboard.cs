@@ -117,7 +117,7 @@ namespace Meshy.Editor
 
         private void OnFocus()
         {
-            api ??= new MeshyClient();
+            api ??= new MeshyClient(new MeshyAuthentication().LoadDefaultsReversed());
 
             if (!hasFetchedTextToTextureGenerations)
             {
@@ -241,6 +241,7 @@ namespace Meshy.Editor
             EditorGUILayout.LabelField("Quickly generate high-quality textures for 3D models using text prompts and concept art.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             RenderTextToTextureOptions();
+            EditorGUILayout.Space();
             EditorGUILayoutExtensions.Divider();
             RenderTextToTextureGenerations();
             EditorGUILayout.EndVertical();
@@ -261,10 +262,45 @@ namespace Meshy.Editor
 
             EditorGUI.BeginChangeCheck();
 
-            // TODO show request options
+            textToTextureRequest.Model = EditorGUILayout.ObjectField("Model", textToTextureRequest.Model, typeof(GameObject), true) as GameObject;
+            textToTextureRequest.ModelUrl = textToTextureRequest.Model == null
+                ? EditorGUILayout.TextField("Model Url", textToTextureRequest.ModelUrl)
+                : string.Empty;
+            textToTextureRequest.ObjectPrompt = EditorGUILayout.DelayedTextField("Object", textToTextureRequest.ObjectPrompt);
+            textToTextureRequest.StylePrompt = EditorGUILayout.DelayedTextField("Style", textToTextureRequest.StylePrompt);
+            textToTextureRequest.NegativePrompt = EditorGUILayout.DelayedTextField("Negative Prompt", textToTextureRequest.NegativePrompt);
+
+            var artStyleSelection = 0;
+
+            for (int i = 0; i < ArtStyles.TextToImageArtStyles.Length; i++)
+            {
+                if (textToTextureRequest.ArtStyle == ArtStyles.TextToImageArtStyles[i])
+                {
+                    artStyleSelection = i;
+                    break;
+                }
+            }
+
+            artStyleSelection = EditorGUILayout.Popup("Art Style", artStyleSelection, ArtStyles.TextToImageArtStyles);
+            textToTextureRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textToTextureRequest.EnablePBR!.Value);
+
+            var resolutionSelection = 0;
+
+            for (int i = 0; i < Resolutions.ResolutionOptions.Length; i++)
+            {
+                if (textToTextureRequest.Resolution == Resolutions.ResolutionOptions[i])
+                {
+                    resolutionSelection = i;
+                    break;
+                }
+            }
+
+            resolutionSelection = EditorGUILayout.Popup("Resolution", resolutionSelection, Resolutions.ResolutionOptions);
 
             if (EditorGUI.EndChangeCheck())
             {
+                textToTextureRequest.ArtStyle = ArtStyles.TextToImageArtStyles[artStyleSelection];
+                textToTextureRequest.Resolution = Resolutions.ResolutionOptions[resolutionSelection];
                 textToTextureOptions = JsonConvert.SerializeObject(textToTextureRequest, MeshyClient.JsonSerializationOptions);
             }
 
@@ -274,8 +310,8 @@ namespace Meshy.Editor
             {
                 EditorApplication.delayCall += () =>
                 {
-                    if (textToTextureRequest.Model == null ||
-                        textToTextureRequest.GlbExport == null ||
+                    if (textToTextureRequest.Model == null &&
+                        textToTextureRequest.GlbExport == null &&
                         string.IsNullOrWhiteSpace(textToTextureRequest.ModelUrl))
                     {
                         Debug.LogError("Missing required model reference for text to texture task!");
@@ -305,15 +341,18 @@ namespace Meshy.Editor
         {
             int? progressId = null;
             MeshyTaskResult taskResult = null;
+            EditorApplication.LockReloadAssemblies();
 
             try
             {
                 taskResult = await api.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(
                     progress =>
                     {
+                        var taskId = progress.Id.ToString("D");
+
                         if (!progressId.HasValue)
                         {
-                            progressId = Progress.Start("Meshy Text to Texture Task", progress.Id.ToString());
+                            progressId = Progress.Start("Meshy Text to Texture Task", taskId);
                         }
                         else if (Progress.Exists(progressId.Value))
                         {
@@ -323,8 +362,17 @@ namespace Meshy.Editor
                             }
                             else
                             {
-                                Progress.Report(progressId.Value, progress.Progress * 0.01f);
+                                Progress.Report(progressId.Value, progress.Progress * 0.01f, taskId);
                             }
+                        }
+
+                        var taskListItem = textToTextureGenerations.FirstOrDefault(task => task.Id == taskId);
+
+                        if (taskListItem != null)
+                        {
+                            taskListItem.Status = progress.Status;
+                            taskListItem.Progress = progress.Progress;
+                            taskListItem.PrecedingTasks = progress.PrecedingTasks;
                         }
                     }));
             }
@@ -340,6 +388,8 @@ namespace Meshy.Editor
             }
             finally
             {
+                EditorApplication.UnlockReloadAssemblies();
+
                 if (taskResult != null &&
                     progressId.HasValue &&
                     Progress.Exists(progressId.Value))
@@ -372,6 +422,7 @@ namespace Meshy.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
             if (textToTextureGenerations == null) { return; }
             textToTextureScrollPosition = EditorGUILayout.BeginScrollView(textToTextureScrollPosition, expandWidthOption);
@@ -436,6 +487,7 @@ namespace Meshy.Editor
             EditorGUILayout.LabelField("Quickly generate impressive 3D models using text prompts.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             RenderTextTo3DOptions();
+            EditorGUILayout.Space();
             EditorGUILayoutExtensions.Divider();
             RenderTextTo3DGenerations();
             EditorGUILayout.EndVertical();
@@ -456,10 +508,41 @@ namespace Meshy.Editor
 
             EditorGUI.BeginChangeCheck();
 
-            // TODO show request options
+            textTo3DRequest.ObjectPrompt = EditorGUILayout.DelayedTextField("Object", textTo3DRequest.ObjectPrompt);
+            textTo3DRequest.StylePrompt = EditorGUILayout.DelayedTextField("Style", textTo3DRequest.StylePrompt);
+            textTo3DRequest.NegativePrompt = EditorGUILayout.DelayedTextField("Negative Prompt", textTo3DRequest.NegativePrompt);
+
+            var artStyleSelection = 0;
+
+            for (int i = 0; i < ArtStyles.TextToImageArtStyles.Length; i++)
+            {
+                if (textTo3DRequest.ArtStyle == ArtStyles.TextToImageArtStyles[i])
+                {
+                    artStyleSelection = i;
+                    break;
+                }
+            }
+
+            artStyleSelection = EditorGUILayout.Popup("Art Style", artStyleSelection, ArtStyles.TextToImageArtStyles);
+            textTo3DRequest.EnablePBR = EditorGUILayout.ToggleLeft("Enable PBR", textTo3DRequest.EnablePBR!.Value);
+
+            var resolutionSelection = 0;
+
+            for (int i = 0; i < Resolutions.ResolutionOptions.Length; i++)
+            {
+                if (textTo3DRequest.Resolution == Resolutions.ResolutionOptions[i])
+                {
+                    resolutionSelection = i;
+                    break;
+                }
+            }
+
+            resolutionSelection = EditorGUILayout.Popup("Resolution", resolutionSelection, Resolutions.ResolutionOptions);
 
             if (EditorGUI.EndChangeCheck())
             {
+                textTo3DRequest.ArtStyle = ArtStyles.TextToImageArtStyles[artStyleSelection];
+                textTo3DRequest.Resolution = Resolutions.ResolutionOptions[resolutionSelection];
                 textTo3DOptions = JsonConvert.SerializeObject(textTo3DRequest, MeshyClient.JsonSerializationOptions);
             }
 
@@ -492,15 +575,18 @@ namespace Meshy.Editor
         {
             int? progressId = null;
             MeshyTaskResult taskResult = null;
+            EditorApplication.LockReloadAssemblies();
 
             try
             {
                 taskResult = await api.TextTo3DEndpoint.CreateTextTo3DTaskAsync(request, new Progress<TaskProgress>(
                     progress =>
                     {
+                        var taskId = progress.Id.ToString("D");
+
                         if (!progressId.HasValue)
                         {
-                            progressId = Progress.Start("Meshy Text to Texture Task", progress.Id.ToString());
+                            progressId = Progress.Start("Meshy Text to Texture Task", taskId);
                         }
                         else if (Progress.Exists(progressId.Value))
                         {
@@ -510,8 +596,17 @@ namespace Meshy.Editor
                             }
                             else
                             {
-                                Progress.Report(progressId.Value, progress.Progress * 0.01f);
+                                Progress.Report(progressId.Value, progress.Progress * 0.01f, taskId);
                             }
+                        }
+
+                        var taskListItem = textTo3DGenerations.FirstOrDefault(task => task.Id == taskId);
+
+                        if (taskListItem != null)
+                        {
+                            taskListItem.Status = progress.Status;
+                            taskListItem.Progress = progress.Progress;
+                            taskListItem.PrecedingTasks = progress.PrecedingTasks;
                         }
                     }));
             }
@@ -527,6 +622,8 @@ namespace Meshy.Editor
             }
             finally
             {
+                EditorApplication.UnlockReloadAssemblies();
+
                 if (taskResult != null &&
                     progressId.HasValue &&
                     Progress.Exists(progressId.Value))
@@ -559,6 +656,7 @@ namespace Meshy.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
             if (textTo3DGenerations == null) { return; }
             textTo3DScrollPosition = EditorGUILayout.BeginScrollView(textTo3DScrollPosition, expandWidthOption);
@@ -676,6 +774,7 @@ namespace Meshy.Editor
         {
             int? progressId = null;
             MeshyTaskResult taskResult = null;
+            EditorApplication.LockReloadAssemblies();
 
             try
             {
@@ -694,7 +793,7 @@ namespace Meshy.Editor
                             }
                             else
                             {
-                                Progress.Report(progressId.Value, progress.Progress * 0.01f);
+                                Progress.Report(progressId.Value, progress.Progress * 0.01f, string.Empty);
                             }
                         }
                     }));
@@ -712,6 +811,8 @@ namespace Meshy.Editor
             }
             finally
             {
+                EditorApplication.UnlockReloadAssemblies();
+
                 if (taskResult != null &&
                     progressId.HasValue &&
                     Progress.Exists(progressId.Value))
@@ -746,6 +847,7 @@ namespace Meshy.Editor
             }
 
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
 
             if (imageTo3DGenerations == null) { return; }
             imageTo3DScrollPosition = EditorGUILayout.BeginScrollView(imageTo3DScrollPosition, expandWidthOption);
@@ -807,26 +909,9 @@ namespace Meshy.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(meshyTask.Id, expandWidthOption);
 
-            if (meshyTask.Progress < 100)
+            if (GUILayout.Button(downloadContent, defaultColumnWidthOption))
             {
-                EditorGUILayout.LabelField(meshyTask.Status.ToString());
-
-                if (meshyTask.PrecedingTasks.HasValue)
-                {
-                    EditorGUILayout.LabelField($"Place in Queue: {meshyTask.PrecedingTasks}");
-                }
-                else
-                {
-                    EditorGUILayout.LabelField("Progress:");
-                    EditorGUI.ProgressBar(GUILayoutUtility.GetLastRect(), meshyTask.Progress * 0.01f, meshyTask.Progress.ToString());
-                }
-            }
-            else
-            {
-                if (GUILayout.Button(downloadContent, defaultColumnWidthOption))
-                {
-                    // TODO
-                }
+                // TODO
             }
 
             EditorGUILayout.EndHorizontal();
@@ -840,22 +925,37 @@ namespace Meshy.Editor
 
             EditorGUILayout.BeginVertical();
 
+            if (meshyTask.Progress < 100)
+            {
+                if (meshyTask.PrecedingTasks.HasValue)
+                {
+                    EditorGUILayout.LabelField($"Waiting on {meshyTask.PrecedingTasks} preceding tasks...");
+                }
+                else
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Progress:");
+                    EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(false, 18f, expandWidthOption), meshyTask.Progress * 0.01f, $"{meshyTask.Progress}%");
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(meshyTask.ObjectPrompt))
             {
-                EditorGUILayout.LabelField("Object Prompt", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Object", EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(meshyTask.ObjectPrompt, EditorStyles.wordWrappedLabel);
+            }
+
+            if (!string.IsNullOrWhiteSpace(meshyTask.StylePrompt))
+            {
+                EditorGUILayout.LabelField("Style", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(meshyTask.StylePrompt, EditorStyles.wordWrappedLabel);
             }
 
             if (!string.IsNullOrWhiteSpace(meshyTask.NegativePrompt))
             {
                 EditorGUILayout.LabelField("Negative Prompt", EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(meshyTask.NegativePrompt, EditorStyles.wordWrappedLabel);
-            }
-
-            if (!string.IsNullOrWhiteSpace(meshyTask.StylePrompt))
-            {
-                EditorGUILayout.LabelField("Style Prompt", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField(meshyTask.StylePrompt, EditorStyles.wordWrappedLabel);
             }
 
             if (!string.IsNullOrWhiteSpace(meshyTask.ArtStyle))

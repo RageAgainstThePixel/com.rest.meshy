@@ -113,7 +113,7 @@ namespace Meshy
         /// </summary>
         [Preserve]
         [JsonProperty("progress")]
-        public int Progress { get; }
+        public int Progress { get; internal set; }
 
         /// <summary>
         /// Timestamp of when the task was started, in milliseconds.
@@ -166,7 +166,7 @@ namespace Meshy
         /// </summary>
         [Preserve]
         [JsonProperty("status")]
-        public Status Status { get; }
+        public Status Status { get; internal set; }
 
         /// <summary>
         /// Error object that contains the error message if the task failed.
@@ -189,7 +189,7 @@ namespace Meshy
         /// </summary>
         [Preserve]
         [JsonProperty("preceding_tasks")]
-        public int? PrecedingTasks { get; }
+        public int? PrecedingTasks { get; internal set; }
 
         [Preserve]
         public static implicit operator string(MeshyTaskResult result) => result?.ToString();
@@ -200,7 +200,7 @@ namespace Meshy
         [Preserve]
         public async Task<Texture2D> LoadThumbnailAsync(bool enableDebug = false, CancellationToken cancellationToken = default)
         {
-            if (Thumbnail == null)
+            if (Thumbnail == null && !string.IsNullOrWhiteSpace(ThumbnailUrl))
             {
                 Thumbnail = await Rest.DownloadTextureAsync(ThumbnailUrl, fileName: $"{Id}.png", debug: enableDebug, cancellationToken: cancellationToken);
             }

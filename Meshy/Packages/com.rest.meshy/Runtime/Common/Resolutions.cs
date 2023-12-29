@@ -7,5 +7,12 @@ namespace Meshy
         public const string X1024 = "1024";
         public const string X2048 = "2048";
         public const string X4096 = "4096";
+
+        internal static readonly string[] ResolutionOptions =
+        {
+            X1024,
+            X2048,
+            X4096
+        };
     }
 }

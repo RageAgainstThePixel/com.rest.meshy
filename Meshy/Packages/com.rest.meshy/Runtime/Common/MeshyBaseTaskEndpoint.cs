@@ -80,27 +80,40 @@ namespace Meshy
         /// <returns><see cref="MeshyTaskResult"/>.</returns>
         internal async Task<MeshyTaskResult> PollTaskProgressAsync(string taskId, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
         {
-            var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
-
-            if (taskResult == null)
+            try
             {
-                throw new Exception($"Failed to get a valid {nameof(taskResult)} for task \"{taskId}\"!");
+                var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
+
+                if (taskResult == null)
+                {
+                    throw new Exception($"Failed to get a valid {nameof(taskResult)} for task \"{taskId}\"!");
+                }
+
+                progress?.Report(taskResult);
+
+                switch (taskResult.Status)
+                {
+                    case Status.Pending:
+                    case Status.InProgress:
+                        await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
+                        return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+                    case Status.Succeeded:
+                    case Status.Failed:
+                    case Status.Expired:
+                        return taskResult;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
-
-            progress?.Report(taskResult);
-
-            switch (taskResult.Status)
+            catch (RestException restEx)
             {
-                case Status.Pending:
-                case Status.InProgress:
-                    await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
+                if (restEx.Response.Code == 429)
+                {
+                    await Task.Delay(PollingIntervalMilliseconds * 2, cancellationToken).ConfigureAwait(true);
                     return await PollTaskProgressAsync(taskId, progress, cancellationToken);
-                case Status.Succeeded:
-                case Status.Failed:
-                case Status.Expired:
-                    return taskResult;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                }
+
+                throw;
             }
         }
     }

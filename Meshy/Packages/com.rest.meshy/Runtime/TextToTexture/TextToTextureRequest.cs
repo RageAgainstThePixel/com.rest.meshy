@@ -78,7 +78,7 @@ namespace Meshy.TextToTexture
 
         [Preserve]
         [JsonIgnore]
-        public GameObject Model { get; }
+        public GameObject Model { get; internal set; }
 
         [Preserve]
         [JsonIgnore]
@@ -95,21 +95,21 @@ namespace Meshy.TextToTexture
         /// </remarks>
         [Preserve]
         [JsonProperty("model_url")]
-        public string ModelUrl { get; }
+        public string ModelUrl { get; internal set; }
 
         /// <summary>
         /// Describe what kind of object the 3D model is.
         /// </summary>
         [Preserve]
         [JsonProperty("object_prompt")]
-        public string ObjectPrompt { get; }
+        public string ObjectPrompt { get; internal set; }
 
         /// <summary>
         /// Describe your desired style of the object.
         /// </summary>
         [Preserve]
         [JsonProperty("style_prompt")]
-        public string StylePrompt { get; }
+        public string StylePrompt { get; internal set; }
 
         /// <summary>
         /// Use the original UV of the model instead of generating new UVs.
@@ -117,7 +117,7 @@ namespace Meshy.TextToTexture
         /// Default to true if not specified.
         /// </summary>
         [JsonProperty("enable_original_uv")]
-        public bool? EnableOriginalUV { get; }
+        public bool? EnableOriginalUV { get; internal set; }
 
         /// <summary>
         /// Generate PBR Maps (metallic, roughness, normal) in addition to the base color.
@@ -125,14 +125,14 @@ namespace Meshy.TextToTexture
         /// </summary>
         [Preserve]
         [JsonProperty("enable_pbr")]
-        public bool? EnablePBR { get; }
+        public bool? EnablePBR { get; internal set; }
 
         /// <summary>
         /// Optional, Describe what the texture should not look like.
         /// </summary>
         [Preserve]
         [JsonProperty("negative_prompt")]
-        public string NegativePrompt { get; }
+        public string NegativePrompt { get; internal set; }
 
         /// <summary>
         /// Specify the resolution of generated textures.
@@ -140,7 +140,7 @@ namespace Meshy.TextToTexture
         /// </summary>
         [Preserve]
         [JsonProperty("resolution")]
-        public string Resolution { get; }
+        public string Resolution { get; internal set; }
 
         /// <summary>
         /// Describe your desired art style of the object.
@@ -151,6 +151,6 @@ namespace Meshy.TextToTexture
         /// </summary>
         [Preserve]
         [JsonProperty("art_style")]
-        public string ArtStyle { get; }
+        public string ArtStyle { get; internal set; }
     }
 }

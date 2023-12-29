@@ -31,14 +31,14 @@ namespace Meshy.TextTo3D
         /// </summary>
         [Preserve]
         [JsonProperty("object_prompt")]
-        public string ObjectPrompt { get; }
+        public string ObjectPrompt { get; internal set; }
 
         /// <summary>
         /// Describe your desired style of the object.
         /// </summary>
         [Preserve]
         [JsonProperty("style_prompt")]
-        public string StylePrompt { get; }
+        public string StylePrompt { get; internal set; }
 
         /// <summary>
         /// Generate PBR Maps (metallic, roughness, normal) in addition to the base color.
@@ -46,14 +46,14 @@ namespace Meshy.TextTo3D
         /// </summary>
         [Preserve]
         [JsonProperty("enable_pbr")]
-        public bool? EnablePBR { get; }
+        public bool? EnablePBR { get; internal set; }
 
         /// <summary>
         /// Describe what the model should not look like.
         /// </summary>
         [Preserve]
         [JsonProperty("negative_prompt")]
-        public string NegativePrompt { get; }
+        public string NegativePrompt { get; internal set; }
 
         /// <summary>
         /// Specify the resolution of generated textures.
@@ -61,7 +61,7 @@ namespace Meshy.TextTo3D
         /// </summary>
         [Preserve]
         [JsonProperty("resolution")]
-        public string Resolution { get; }
+        public string Resolution { get; internal set; }
 
         /// <summary>
         /// Describe your desired art style of the object.
@@ -75,6 +75,6 @@ namespace Meshy.TextTo3D
         /// </remarks>
         [Preserve]
         [JsonProperty("art_style")]
-        public string ArtStyle { get; }
+        public string ArtStyle { get; internal set; }
     }
 }
