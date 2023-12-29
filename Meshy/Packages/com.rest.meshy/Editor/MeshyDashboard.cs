@@ -1,13 +1,13 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Meshy.ImageTo3D;
 using Meshy.TextTo3D;
 using Meshy.TextToTexture;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Utilities.Extensions.Editor;
@@ -117,7 +117,7 @@ namespace Meshy.Editor
 
         private void OnFocus()
         {
-            api ??= new MeshyClient(new MeshyAuthentication().LoadDefaultsReversed());
+            api ??= new MeshyClient();
 
             if (!hasFetchedTextToTextureGenerations)
             {
@@ -261,7 +261,7 @@ namespace Meshy.Editor
 
             EditorGUI.BeginChangeCheck();
 
-
+            // TODO show request options
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -443,13 +443,105 @@ namespace Meshy.Editor
             EditorGUILayout.EndHorizontal();
         }
 
+        [SerializeField]
+        private string textTo3DOptions;
+
+        private TextTo3DRequest textTo3DRequest;
+
         private void RenderTextTo3DOptions()
         {
+            textTo3DRequest ??= string.IsNullOrWhiteSpace(textTo3DOptions)
+                ? new TextTo3DRequest(string.Empty, string.Empty)
+                : JsonConvert.DeserializeObject<TextTo3DRequest>(textTo3DOptions, MeshyClient.JsonSerializationOptions);
+
+            EditorGUI.BeginChangeCheck();
+
+            // TODO show request options
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                textTo3DOptions = JsonConvert.SerializeObject(textTo3DRequest, MeshyClient.JsonSerializationOptions);
+            }
+
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button(generateContent))
+            {
+                EditorApplication.delayCall += () =>
+                {
+                    if (string.IsNullOrWhiteSpace(textTo3DRequest.ObjectPrompt))
+                    {
+                        Debug.LogError("Missing object prompt for text to texture task!");
+                        return;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(textTo3DRequest.StylePrompt))
+                    {
+                        Debug.LogError("Missing style prompt for text to texture task!");
+                        return;
+                    }
+
+                    GenerateTextTo3D(textTo3DRequest);
+                    textTo3DOptions = string.Empty;
+                    textTo3DRequest = null;
+                };
+            }
         }
 
         private static async void GenerateTextTo3D(TextTo3DRequest request)
         {
-            await Task.CompletedTask;
+            int? progressId = null;
+            MeshyTaskResult taskResult = null;
+
+            try
+            {
+                taskResult = await api.TextTo3DEndpoint.CreateTextTo3DTaskAsync(request, new Progress<TaskProgress>(
+                    progress =>
+                    {
+                        if (!progressId.HasValue)
+                        {
+                            progressId = Progress.Start("Meshy Text to Texture Task", progress.Id.ToString());
+                        }
+                        else if (Progress.Exists(progressId.Value))
+                        {
+                            if (progress.PrecedingTasks.HasValue)
+                            {
+                                Progress.Report(progressId.Value, -1, $"Waiting on {progress.PrecedingTasks.Value} pending tasks");
+                            }
+                            else
+                            {
+                                Progress.Report(progressId.Value, progress.Progress * 0.01f);
+                            }
+                        }
+                    }));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+
+                if (progressId.HasValue &&
+                    Progress.Exists(progressId.Value))
+                {
+                    Progress.Finish(progressId.Value, Progress.Status.Failed);
+                }
+            }
+            finally
+            {
+                if (taskResult != null &&
+                    progressId.HasValue &&
+                    Progress.Exists(progressId.Value))
+                {
+                    var status = taskResult.Status switch
+                    {
+                        Status.Succeeded => Progress.Status.Succeeded,
+                        _ => Progress.Status.Failed,
+                    };
+
+                    Progress.Finish(progressId.Value, status);
+                }
+
+                FetchTextTo3DGenerations();
+            }
         }
 
         private Vector2 textTo3DScrollPosition;
@@ -606,6 +698,7 @@ namespace Meshy.Editor
                             }
                         }
                     }));
+                await taskResult.LoadThumbnailAsync();
             }
             catch (Exception e)
             {
@@ -614,7 +707,7 @@ namespace Meshy.Editor
                 if (progressId.HasValue &&
                     Progress.Exists(progressId.Value))
                 {
-                    Progress.Finish(progressId.Value, Progress.Status.Canceled);
+                    Progress.Finish(progressId.Value, Progress.Status.Failed);
                 }
             }
             finally
@@ -713,7 +806,6 @@ namespace Meshy.Editor
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(meshyTask.Id, expandWidthOption);
-            //EditorGUILayout.LabelField($"{meshyTask.CreatedAt}");
 
             if (meshyTask.Progress < 100)
             {
