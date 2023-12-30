@@ -18,7 +18,7 @@ The recommended installation method is though the unity package manager and [Ope
 
 - Open your Unity project settings
 - Select the `Package Manager`
-![scoped-registries](Meshy/Packages/com.rest.meshy/Documentation~/images/package-manager-scopes.png)
+![scoped-registries](images/package-manager-scopes.png)
 - Add the OpenUPM package registry:
   - Name: `OpenUPM`
   - URL: `https://package.openupm.com`
@@ -90,7 +90,7 @@ You can create a new one by using the context menu of the project pane and creat
 
 :warning: Beware checking this file into source control, as other people will be able to see your API key.
 
-![Create new MeshyConfiguration](Meshy/Packages/com.rest.meshy/Documentation~/images/create-scriptable-object.png)
+![Create new MeshyConfiguration](images/create-scriptable-object.png)
 
 #### Load key from configuration file
 
@@ -140,14 +140,14 @@ You can perform the same tasks in the dashboard as you would in the webapp.
 
 Access the dashboard via `Window/Dashboards/Meshy`
 
-![dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/dashboard-menu.png)
+![dashboard](images/dashboard-menu.png)
 
 - [Generate textures for an existing 3D model](#text-to-texture).
-  ![text-to-texture-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/text-to-texture-dashboard.png)
+  ![text-to-texture-dashboard](images/text-to-texture-dashboard.png)
 - [Generate a 3D model from a text prompt](#text-to-3d).
-  ![text-to-3d-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/text-to-3d-dashboard.png)
+  ![text-to-3d-dashboard](images/text-to-3d-dashboard.png)
 - [Generate a 3d model from an image](#image-to-3d).
-  ![image-to-3d-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/image-to-3d-dashboard.png)
+  ![image-to-3d-dashboard](images/image-to-3d-dashboard.png)
 
 ### Text to texture
 
