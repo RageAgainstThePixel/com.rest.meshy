@@ -13,7 +13,7 @@
     "repository": "https://github.com/RageAgainstThePixel/com.rest.meshy.git"
   },
   "author": {
-    "name": "StephenHodgson",
+    "name": "Stephen Hodgson",
     "url": "https://github.com/StephenHodgson"
   },
   "publishConfig": {
@@ -21,7 +21,7 @@
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.utilities.rest": "2.4.2",
+    "com.utilities.rest": "2.4.4",
     "com.unity.cloud.gltfast": "6.0.1"
   }
 }

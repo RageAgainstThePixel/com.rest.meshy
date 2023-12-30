@@ -17,78 +17,51 @@ using Progress = UnityEditor.Progress;
 
 namespace Meshy.Editor
 {
-    public class MeshyDashboard : EditorWindow
+    public class MeshyDashboard : AbstractEditorDashboard
     {
-        private const int TabWidth = 18;
-        private const int EndWidth = 10;
-        private const int MaxCharacterLength = 5000;
-        private const int InnerLabelIndentLevel = 13;
-
-        private const float InnerLabelWidth = 1.9f;
-        private const float WideColumnWidth = 128f;
-        private const float DefaultColumnWidth = 96f;
-        private const float SettingsLabelWidth = 1.56f;
-
-        private static readonly GUIContent resetContent = new GUIContent("Reset");
-        private static readonly GUIContent deleteContent = new GUIContent("Delete");
-        private static readonly GUIContent refreshContent = new GUIContent("Refresh");
-        private static readonly GUIContent downloadContent = new GUIContent("Download");
         private static readonly GUIContent generateContent = new GUIContent("Generate");
-        private static readonly GUIContent saveDirectoryContent = new GUIContent("Save Directory");
-        private static readonly GUIContent changeDirectoryContent = new GUIContent("Change Save Directory");
+        private static readonly GUIContent generationsContent = new GUIContent("Generations");
         private static readonly GUIContent dashboardTitleContent = new GUIContent($"{nameof(Meshy)} Dashboard");
-
-        private static readonly GUILayoutOption[] defaultColumnWidthOption =
-        {
-            GUILayout.Width(DefaultColumnWidth)
-        };
-
-        private static readonly GUILayoutOption[] wideColumnWidthOption =
-        {
-            GUILayout.Width(WideColumnWidth)
-        };
-
-        private static readonly GUILayoutOption[] expandWidthOption =
-        {
-            GUILayout.ExpandWidth(true)
-        };
-
         private static readonly string[] tabTitles = { "Text to Texture", "Text to 3D", "Image to 3D" };
-
-        private static GUIStyle boldCenteredHeaderStyle;
-
-        private static GUIStyle BoldCenteredHeaderStyle
-        {
-            get
-            {
-                if (boldCenteredHeaderStyle == null)
-                {
-                    var editorStyle = EditorGUIUtility.isProSkin ? EditorStyles.whiteLargeLabel : EditorStyles.largeLabel;
-
-                    if (editorStyle != null)
-                    {
-                        boldCenteredHeaderStyle = new GUIStyle(editorStyle)
-                        {
-                            alignment = TextAnchor.MiddleCenter,
-                            fontSize = 18,
-                            padding = new RectOffset(0, 0, -8, -8)
-                        };
-                    }
-                }
-
-                return boldCenteredHeaderStyle;
-            }
-        }
-
-        private static string DefaultSaveDirectoryKey => $"{Application.productName}_{nameof(Meshy)}_EditorDownloadDirectory";
-
-        private static string DefaultSaveDirectory => Application.dataPath;
+        private static readonly string authError = $"No valid {nameof(MeshyConfiguration)} was found. This tool requires that you set your API key.";
 
         #region Static Content
 
-        private static MeshyClient api;
+        #region Dashboard Overrides
 
-        private static string editorDownloadDirectory = string.Empty;
+        protected override GUIContent DashboardTitleContent => dashboardTitleContent;
+
+        protected override string DefaultSaveDirectoryKey => $"{Application.productName}_{nameof(Meshy)}_EditorDownloadDirectory";
+
+        protected override string EditorDownloadDirectory { get; set; }
+
+        protected override string[] DashboardTabs => tabTitles;
+
+        protected override bool TryCheckDashboardConfiguration(out string errorMessage)
+        {
+            errorMessage = authError;
+            return api is { HasValidAuthentication: true };
+        }
+
+        protected override void RenderTab(int tab)
+        {
+            switch (tab)
+            {
+                case 0:
+                    RenderTextToTextureTab();
+                    break;
+                case 1:
+                    RenderTextTo3DTab();
+                    break;
+                case 2:
+                    RenderImageTo3DTab();
+                    break;
+            }
+        }
+
+        #endregion Dashboard Overrides
+
+        private static MeshyClient api;
 
         private static int page = 1;
 
@@ -97,9 +70,11 @@ namespace Meshy.Editor
         #endregion Static Content
 
         [SerializeField]
-        private int tab;
+        private MeshyConfiguration meshyConfiguration;
 
-        private Vector2 scrollPosition = Vector2.zero;
+        private MeshySettings meshySettings;
+
+        private MeshyAuthentication meshyAuthentication;
 
         [MenuItem("Window/Dashboards/" + nameof(Meshy), false, priority: 999)]
         private static void OpenWindow()
@@ -110,15 +85,21 @@ namespace Meshy.Editor
             instance.titleContent = dashboardTitleContent;
         }
 
-        private void OnEnable()
-        {
-            titleContent = dashboardTitleContent;
-            minSize = new Vector2(WideColumnWidth * 4.375F, WideColumnWidth * 4);
-        }
-
         private void OnFocus()
         {
-            api ??= new MeshyClient(new MeshyAuthentication().LoadDefaultsReversed());
+            if (meshyConfiguration == null)
+            {
+                meshyConfiguration = Resources.Load<MeshyConfiguration>($"{nameof(MeshyConfiguration)}.asset");
+            }
+
+            meshyAuthentication ??= meshyConfiguration == null
+                ? new MeshyAuthentication().LoadDefaultsReversed()
+                : new MeshyAuthentication(meshyConfiguration);
+            meshySettings ??= meshyConfiguration == null
+                ? new MeshySettings()
+                : new MeshySettings(meshyConfiguration);
+
+            api ??= new MeshyClient(meshyAuthentication, meshySettings);
 
             if (!hasFetchedTextToTextureGenerations)
             {
@@ -137,99 +118,6 @@ namespace Meshy.Editor
                 hasFetchedImageTo3DGenerations = true;
                 FetchImageTo3DGenerations();
             }
-        }
-
-        private void OnGUI()
-        {
-            EditorGUILayout.BeginVertical();
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Space(TabWidth);
-            EditorGUILayout.BeginVertical();
-            { // Begin Header
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField(dashboardTitleContent, BoldCenteredHeaderStyle);
-                EditorGUILayout.Space();
-
-                if (api is not { HasValidAuthentication: true })
-                {
-                    EditorGUILayout.HelpBox($"No valid {nameof(MeshyConfiguration)} was found. This tool requires that you set your API key.", MessageType.Error);
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.EndHorizontal();
-                    return;
-                }
-
-                EditorGUILayout.Space();
-                EditorGUI.BeginChangeCheck();
-                tab = GUILayout.Toolbar(tab, tabTitles, expandWidthOption);
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    GUI.FocusControl(null);
-                    // reset generation list page.
-                    page = 1;
-                }
-
-                EditorGUILayout.LabelField(saveDirectoryContent);
-
-                if (string.IsNullOrWhiteSpace(editorDownloadDirectory))
-                {
-                    editorDownloadDirectory = EditorPrefs.GetString(DefaultSaveDirectoryKey, DefaultSaveDirectory);
-                }
-
-                EditorGUILayout.BeginHorizontal();
-                {
-                    EditorGUILayout.TextField(editorDownloadDirectory, expandWidthOption);
-
-                    if (GUILayout.Button(resetContent, wideColumnWidthOption))
-                    {
-                        editorDownloadDirectory = DefaultSaveDirectory;
-                        EditorPrefs.SetString(DefaultSaveDirectoryKey, editorDownloadDirectory);
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.BeginHorizontal();
-                {
-                    if (GUILayout.Button(changeDirectoryContent, expandWidthOption))
-                    {
-                        EditorApplication.delayCall += () =>
-                        {
-                            var result = EditorUtility.OpenFolderPanel(saveDirectoryContent.text, editorDownloadDirectory, string.Empty);
-
-                            if (!string.IsNullOrWhiteSpace(result))
-                            {
-                                editorDownloadDirectory = result;
-                                EditorPrefs.SetString(DefaultSaveDirectoryKey, editorDownloadDirectory);
-                            }
-                        };
-                    }
-                }
-                EditorGUILayout.EndHorizontal();
-            } // End Header
-            EditorGUILayout.EndVertical();
-            GUILayout.Space(EndWidth);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-            EditorGUILayoutExtensions.Divider();
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, expandWidthOption);
-            EditorGUI.indentLevel++;
-
-            switch (tab)
-            {
-                case 0:
-                    RenderTextToTextureTab();
-                    break;
-                case 1:
-                    RenderTextTo3DTab();
-                    break;
-                case 2:
-                    RenderImageTo3DTab();
-                    break;
-            }
-
-            EditorGUI.indentLevel--;
-            EditorGUILayout.EndScrollView();
-            EditorGUILayout.EndVertical();
         }
 
         #region Text to Texture
@@ -414,11 +302,11 @@ namespace Meshy.Editor
         private void RenderTextToTextureGenerations()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Generations");
+            EditorGUILayout.LabelField(generationsContent, EditorStyles.boldLabel);
             GUI.enabled = !isFetchingTextToTextureGenerations;
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(refreshContent, defaultColumnWidthOption))
+            if (GUILayout.Button(RefreshContent, DefaultColumnWidthOption))
             {
                 EditorApplication.delayCall += FetchTextToTextureGenerations;
             }
@@ -427,7 +315,7 @@ namespace Meshy.Editor
             EditorGUILayout.Space();
 
             if (textToTextureGenerations == null) { return; }
-            textToTextureScrollPosition = EditorGUILayout.BeginScrollView(textToTextureScrollPosition, expandWidthOption);
+            textToTextureScrollPosition = EditorGUILayout.BeginScrollView(textToTextureScrollPosition, ExpandWidthOption);
 
             foreach (var meshyTaskResult in textToTextureGenerations)
             {
@@ -588,7 +476,7 @@ namespace Meshy.Editor
 
                         if (!progressId.HasValue)
                         {
-                            progressId = Progress.Start("Meshy Text to Texture Task", taskId);
+                            progressId = Progress.Start("Meshy Text to 3D Task", taskId);
                         }
                         else if (Progress.Exists(progressId.Value))
                         {
@@ -648,11 +536,11 @@ namespace Meshy.Editor
         private void RenderTextTo3DGenerations()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Generations");
+            EditorGUILayout.LabelField(generationsContent, EditorStyles.boldLabel);
             GUI.enabled = !isFetchingTextTo3DGenerations;
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(refreshContent, defaultColumnWidthOption))
+            if (GUILayout.Button(RefreshContent, DefaultColumnWidthOption))
             {
                 EditorApplication.delayCall += FetchTextTo3DGenerations;
             }
@@ -661,7 +549,7 @@ namespace Meshy.Editor
             EditorGUILayout.Space();
 
             if (textTo3DGenerations == null) { return; }
-            textTo3DScrollPosition = EditorGUILayout.BeginScrollView(textTo3DScrollPosition, expandWidthOption);
+            textTo3DScrollPosition = EditorGUILayout.BeginScrollView(textTo3DScrollPosition, ExpandWidthOption);
 
             foreach (var meshyTaskResult in textTo3DGenerations)
             {
@@ -839,11 +727,11 @@ namespace Meshy.Editor
         private void RenderImageTo3DGenerations()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Generations");
+            EditorGUILayout.LabelField(generationsContent, EditorStyles.boldLabel);
             GUI.enabled = !isFetchingTextTo3DGenerations;
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(refreshContent, defaultColumnWidthOption))
+            if (GUILayout.Button(RefreshContent, DefaultColumnWidthOption))
             {
                 EditorApplication.delayCall += FetchTextTo3DGenerations;
             }
@@ -852,7 +740,7 @@ namespace Meshy.Editor
             EditorGUILayout.Space();
 
             if (imageTo3DGenerations == null) { return; }
-            imageTo3DScrollPosition = EditorGUILayout.BeginScrollView(imageTo3DScrollPosition, expandWidthOption);
+            imageTo3DScrollPosition = EditorGUILayout.BeginScrollView(imageTo3DScrollPosition, ExpandWidthOption);
 
             foreach (var meshyTaskResult in imageTo3DGenerations)
             {
@@ -905,13 +793,13 @@ namespace Meshy.Editor
 
         #endregion Image to 3d
 
-        private static void RenderTaskResult(MeshyTaskResult meshyTask)
+        private void RenderTaskResult(MeshyTaskResult meshyTask)
         {
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField(meshyTask.Id, expandWidthOption);
+            EditorGUILayout.LabelField(meshyTask.Id, ExpandWidthOption);
 
-            if (GUILayout.Button(downloadContent, defaultColumnWidthOption))
+            if (GUILayout.Button(DownloadContent, DefaultColumnWidthOption))
             {
                 EditorApplication.delayCall += () =>
                 {
@@ -938,10 +826,7 @@ namespace Meshy.Editor
                 }
                 else
                 {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField("Progress:");
-                    EditorGUI.ProgressBar(EditorGUILayout.GetControlRect(false, 18f, expandWidthOption), meshyTask.Progress * 0.01f, $"{meshyTask.Progress}%");
-                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayoutExtensions.DrawProgressBar("Progress", meshyTask.Progress * 0.01f, ExpandWidthOption);
                 }
             }
 
@@ -975,7 +860,7 @@ namespace Meshy.Editor
             EditorGUILayoutExtensions.Divider();
         }
 
-        private static async void DownloadTaskAssets(MeshyTaskResult meshyTask)
+        private async void DownloadTaskAssets(MeshyTaskResult meshyTask)
         {
             try
             {
@@ -985,29 +870,32 @@ namespace Meshy.Editor
                 }
 
                 var cachedPath = await Rest.DownloadFileAsync(meshyTask.ModelUrls.Glb, fileName: $"{meshyTask.Id}.glb", debug: false);
-                cachedPath = cachedPath.Replace("file://", string.Empty);
-
-                Debug.Log(cachedPath);
+                cachedPath = cachedPath.Replace("file://", string.Empty).Replace("/", "\\");
 
                 if (!File.Exists(cachedPath))
                 {
                     throw new MissingReferenceException("Failed to download model!");
                 }
 
-                if (!Directory.Exists(editorDownloadDirectory))
+                if (!Directory.Exists(EditorDownloadDirectory))
                 {
-                    Directory.CreateDirectory(editorDownloadDirectory);
+                    Directory.CreateDirectory(EditorDownloadDirectory);
                 }
 
-                var shallowPath = cachedPath
-                    .Replace(Rest.DownloadCacheDirectory.Replace("/", "\\"), string.Empty);
-                Debug.Log(shallowPath);
-                var importPath = $"{editorDownloadDirectory}{shallowPath}";
-                Debug.Log(importPath);
-                if (File.Exists(importPath)) { return; }
-                File.Copy(cachedPath, importPath);
-                importPath = GetLocalPath(importPath);
-                AssetDatabase.ImportAsset(importPath, ImportAssetOptions.ForceUpdate);
+                var shallowPath = cachedPath.Replace(Rest.DownloadCacheDirectory.Replace("/", "\\"), string.Empty);
+                var importPath = $"{EditorDownloadDirectory}{shallowPath}";
+
+                if (!File.Exists(importPath))
+                {
+                    File.Copy(cachedPath, importPath);
+                    importPath = GetLocalPath(importPath);
+                    AssetDatabase.ImportAsset(importPath, ImportAssetOptions.ForceUpdate);
+                }
+                else
+                {
+                    importPath = GetLocalPath(importPath);
+                }
+
                 var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(importPath);
 
                 if (asset == null)
@@ -1024,8 +912,5 @@ namespace Meshy.Editor
                 Debug.LogError(e);
             }
         }
-
-        private static string GetLocalPath(string path)
-            => path.Replace("\\", "/").Replace(Application.dataPath, "Assets");
     }
 }

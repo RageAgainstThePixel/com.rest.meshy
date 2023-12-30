@@ -62,11 +62,17 @@ namespace Meshy
             set => cachedDefault = value;
         }
 
+        /// <inheritdoc />
         public override MeshyAuthentication LoadFromAsset(MeshyConfiguration configuration = null)
         {
             if (configuration == null)
             {
-                Debug.LogWarning($"This can be speed this up by passing a {nameof(MeshyConfiguration)} to the {nameof(MeshyAuthentication)}.ctr");
+                configuration = Resources.Load<MeshyConfiguration>($"{nameof(MeshyConfiguration)}.asset");
+            }
+
+            if (configuration == null)
+            {
+                Debug.LogWarning($"This can be speed up by passing a {nameof(MeshyConfiguration)} to the {nameof(MeshyAuthentication)}.ctr");
                 configuration = Resources.LoadAll<MeshyConfiguration>(string.Empty).FirstOrDefault(o => o != null);
             }
 

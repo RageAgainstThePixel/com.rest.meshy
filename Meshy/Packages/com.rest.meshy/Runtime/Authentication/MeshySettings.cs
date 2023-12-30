@@ -21,8 +21,13 @@ namespace Meshy
         /// Creates a new instance of <see cref="MeshySettings"/> with provided <see cref="configuration"/>.
         /// </summary>
         /// <param name="configuration"><see cref="MeshyConfiguration"/>.</param>
-        public MeshySettings(MeshyConfiguration configuration)
+        public MeshySettings(MeshyConfiguration configuration = null)
         {
+            if (configuration == null)
+            {
+                configuration = Resources.Load<MeshyConfiguration>($"{nameof(MeshyConfiguration)}.asset");
+            }
+
             if (configuration == null)
             {
                 Debug.LogWarning($"This can be speed up by directly passing a {nameof(MeshyConfiguration)} to the {nameof(MeshySettings)}.ctr");

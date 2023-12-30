@@ -27,15 +27,18 @@ namespace Meshy.Tests
         }
 
         [Test]
+        [Timeout(720000)]
         public async Task Test_02_01_CreateImageTo3DTask_URL()
         {
             Assert.IsNotNull(MeshyClient.ImageTo3DEndpoint);
             var request = new ImageTo3DRequest(testImageUrl);
             var taskResult = await MeshyClient.ImageTo3DEndpoint.CreateImageTo3DTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
             Assert.IsNotNull(taskResult);
+            Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
         }
 
         [Test]
+        [Timeout(720000)]
         public async Task Test_02_02_CreateImageTo3DTask_Texture()
         {
             Assert.IsNotNull(MeshyClient.ImageTo3DEndpoint);
@@ -44,6 +47,7 @@ namespace Meshy.Tests
             var request = new ImageTo3DRequest(texture);
             var taskResult = await MeshyClient.ImageTo3DEndpoint.CreateImageTo3DTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
             Assert.IsNotNull(taskResult);
+            Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
         }
     }
 }

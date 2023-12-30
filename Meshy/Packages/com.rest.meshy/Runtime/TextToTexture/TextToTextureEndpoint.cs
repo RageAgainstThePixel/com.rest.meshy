@@ -59,14 +59,17 @@ namespace Meshy.TextToTexture
                 }
 
                 var form = new WWWForm();
-                using var glbStream = new MemoryStream();
+                await using var glbStream = new MemoryStream();
 
                 if (!await request.GlbExport.SaveToStreamAndDispose(glbStream, cancellationToken))
                 {
                     throw new Exception($"Failed to export {request.Model.name} to .glb!");
                 }
 
-                form.AddBinaryData("model_file", glbStream.ToArray(), $"{UnityWebRequest.EscapeURL(request.Model.name)}.glb", "multipart/form-data");
+                var modelName = request.Model != null
+                    ? UnityWebRequest.EscapeURL(request.Model.name)
+                    : request.ObjectPrompt;
+                form.AddBinaryData("model_file", glbStream.ToArray(), $"{modelName}.glb", "multipart/form-data");
                 form.AddField("object_prompt", request.ObjectPrompt);
                 form.AddField("style_prompt", request.StylePrompt);
 

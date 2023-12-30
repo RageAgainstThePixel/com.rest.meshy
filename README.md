@@ -18,7 +18,7 @@ The recommended installation method is though the unity package manager and [Ope
 
 - Open your Unity project settings
 - Select the `Package Manager`
-![scoped-registries](images/package-manager-scopes.png)
+![scoped-registries](Meshy/Packages/com.rest.meshy/Documentation~/images/package-manager-scopes.png)
 - Add the OpenUPM package registry:
   - Name: `OpenUPM`
   - URL: `https://package.openupm.com`
@@ -46,8 +46,14 @@ The recommended installation method is though the unity package manager and [Ope
 - [Authentication](#authentication)
 - [Dashboard](#dashboard)
 - [Text to Texture](#text-to-texture)
+  - [List Text to Texture Tasks](#list-text-to-texture-tasks)
+  - [Create Text to Texture Task](#create-new-text-to-texture-task)
 - [Text to 3D](#text-to-3d)
-- [Image to 3d](#image-to-3d)
+  - [List Text to 3D Tasks](#list-text-to-3d-tasks)
+  - [Create Text to 3D Task](#create-new-text-to-3d-task)
+- [Image to 3D](#image-to-3d)
+  - [List Image to 3D Tasks](#list-image-to-3d-tasks)
+  - [Create Image to 3D Task](#create-new-image-to-3d-task)
 
 ### [Authentication](https://docs.meshy.ai/api-authentication)
 
@@ -128,8 +134,134 @@ var api = new MeshyClient(new MeshyAuthentication().LoadFromEnvironment());
 
 ### Dashboard
 
+You can perform the same tasks in the dashboard as you would in the webapp.
+
+> pro-tip: You can also use the context window to quickly access in editor options for prefabs and scene objects!
+
+Access the dashboard via `Window/Dashboards/Meshy`
+
+![dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/dashboard-menu.png)
+
+- [Generate textures for an existing 3D model](#text-to-texture).
+  ![text-to-texture-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/text-to-texture-dashboard.png)
+- [Generate a 3D model from a text prompt](#text-to-3d).
+  ![text-to-3d-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/text-to-3d-dashboard.png)
+- [Generate a 3d model from an image](#image-to-3d).
+  ![image-to-3d-dashboard](Meshy/Packages/com.rest.meshy/Documentation~/images/image-to-3d-dashboard.png)
+
 ### Text to texture
+
+Quickly generate high-quality textures for your existing 3D models using text prompts and concept art.
+
+#### List Text to texture tasks
+
+```csharp
+var api = new MeshyClient();
+var textToTextureTasks = await api.TextToTextureEndpoint.ListTasksAsync(1, 12, SortOrder.Descending);
+
+foreach (var meshyTask in textToTextureTasks)
+{
+    Debug.Log($"{meshyTask.Id} | created_at: {meshyTask.CreatedAt}");
+}
+```
+
+#### Create new text To texture task
+
+Creates a new text to texture task, and reports progress until the task is completed.
+
+Pass in a prefab or scene GameObject to be re-textured:
+
+```csharp
+var api = new MeshyClient();
+var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+var request = new TextToTextureRequest(sphere, "Basketball", "game assets", enableOriginalUV: false, resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+var taskResult = await MeshyClient.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+Assert.IsNotNull(taskResult);
+Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
+```
+
+If you need more control over the glb export process you can also pass in your own `GLTFast.Export.GameObjectExport` object:
+
+```csharp
+var api = new MeshyClient();
+var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+var exportSettings = new ExportSettings
+{
+    Format = GltfFormat.Binary,
+    FileConflictResolution = FileConflictResolution.Overwrite,
+    ComponentMask = ~(ComponentType.Camera | ComponentType.Animation | ComponentType.Light),
+};
+var gameObjectExportSettings = new GameObjectExportSettings
+{
+    OnlyActiveInHierarchy = false,
+    DisabledComponents = true,
+};
+var glbExport = new GameObjectExport(exportSettings, gameObjectExportSettings);
+glbExport.AddScene(new[] { sphere });
+var request = new TextToTextureRequest(glbExport, "Planet", "game asset, space, vibrant, highly detailed", enableOriginalUV: false, resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+var taskResult = await MeshyClient.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+Assert.IsNotNull(taskResult);
+Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
+```
+
+You can also use a public url:
+
+```csharp
+var api = new MeshyClient();
+var modelUrl = "https://github.com/KhronosGroup/UnityGLTF/raw/master/UnityGLTF/Assets/StreamingAssets/Lantern/glTF-Binary/Lantern.glb"
+var request = new TextToTextureRequest(modelUrl, "Lantern", "game assets", resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+var taskResult = await api.TextToTextureEndpoint.CreateTextToTextureTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
+```
 
 ### Text to 3D
 
+Quickly generate impressive 3D models using text prompts.
+
+#### List text to 3D tasks
+
+```csharp
+var api = new MeshyClient();
+var textTo3DTasks = await MeshyClient.TextTo3DEndpoint.ListTasksAsync(1, 12, SortOrder.Descending);
+
+foreach (var meshyTask in textTo3DTasks)
+{
+    Debug.Log($"{meshyTask.Id} | created_at: {meshyTask.CreatedAt}");
+}
+```
+
+#### Create new text to 3D task
+
+```csharp
+var request = new TextTo3DRequest("a treasure chest", "realistic, wooden, carved, highest quality", resolution: Resolutions.X1024, artStyle: ArtStyles.Realistic);
+var taskResult = await MeshyClient.TextTo3DEndpoint.CreateTextTo3DTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
+```
+
 ### Image to 3D
+
+Quickly transform your 2D images into stunning 3D models and bring your visuals to life.
+
+#### List image to 3D tasks
+
+> :warning: [Currently does not work with current API version](https://github.com/RageAgainstThePixel/com.rest.meshy/issues/2).
+
+```csharp
+var api = new MeshyClient();
+var imageTo3dTasks = await api.ImageTo3DEndpoint.ListTasksAsync(1, 12, SortOrder.Descending);
+
+foreach (var meshyTask in imageTo3dTasks)
+{
+    Debug.Log($"{meshyTask.Id} | created_at: {meshyTask.CreatedAt}");
+}
+```
+
+#### Create new image to 3D task
+
+```csharp
+var imageUrl = "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/screenshot/screenshot-x150.jpg";
+var request = new ImageTo3DRequest(imageUrl);
+var taskResult = await MeshyClient.ImageTo3DEndpoint.CreateImageTo3DTaskAsync(request, new Progress<TaskProgress>(progress => Debug.Log($"[{progress.Id}] {progress.Status}: {progress.PrecedingTasks ?? progress.Progress}")));
+Assert.IsNotNull(taskResult);
+Debug.Log($"{taskResult.Id} | created_at: {taskResult.FinishedAt} | expires_at: {taskResult.ExpiresAt}");
+```

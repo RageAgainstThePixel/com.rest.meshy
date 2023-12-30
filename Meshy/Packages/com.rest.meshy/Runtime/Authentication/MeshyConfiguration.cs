@@ -5,7 +5,7 @@ using Utilities.WebRequestRest.Interfaces;
 
 namespace Meshy
 {
-    [CreateAssetMenu(fileName = nameof(MeshyConfiguration), menuName = "Meshy/" + nameof(MeshyConfiguration), order = 0)]
+    [CreateAssetMenu(fileName = nameof(MeshyConfiguration), menuName = nameof(Meshy) + "/" + nameof(MeshyConfiguration), order = 0)]
     public sealed class MeshyConfiguration : ScriptableObject, IConfiguration
     {
         [SerializeField]
