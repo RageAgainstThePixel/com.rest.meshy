@@ -1,0 +1,27 @@
+{
+  "name": "com.rest.meshy",
+  "displayName": "Meshy",
+  "description": "Rest.Meshy description goes here.",
+  "keywords": [],
+  "version": "1.0.0-preview.1",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy#documentation",
+  "changelogUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy/releases",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "repository": "https://github.com/RageAgainstThePixel/com.rest.meshy.git"
+  },
+  "author": {
+    "name": "Stephen Hodgson",
+    "url": "https://github.com/StephenHodgson"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  },
+  "hideInEditor": false,
+  "dependencies": {
+    "com.utilities.rest": "2.4.4",
+    "com.unity.cloud.gltfast": "6.0.1"
+  }
+}
