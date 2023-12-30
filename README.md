@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/855294214065487932.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/xQgMW9ufN4) [![openupm](https://img.shields.io/npm/v/com.rest.meshy?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.rest.meshy/) [![openupm](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.rest.meshy)](https://openupm.com/packages/com.rest.meshy/)
 
-A Meshy package for the [Unity](https://unity.com/) Game Engine.
+A non-official [Meshy](https://www.meshy.ai/) generative ai RESTful client for the [Unity](https://unity.com/) Game Engine.
 
 ***All copyrights, trademarks, logos, and assets are the property of their respective owners.***
 
