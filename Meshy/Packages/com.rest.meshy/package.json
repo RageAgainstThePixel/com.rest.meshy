@@ -1,10 +1,10 @@
 {
   "name": "com.rest.meshy",
   "displayName": "Meshy",
-  "description": "Rest.Meshy description goes here.",
+  "description": "A Non-Official Meshy Rest Client for Unity (UPM)",
   "keywords": [],
-  "version": "1.0.0-preview.1",
-  "unity": "2021.3",
+  "version": "1.0.0",
+  "unity": "2022.3",
   "documentationUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy#documentation",
   "changelogUrl": "https://github.com/RageAgainstThePixel/com.rest.meshy/releases",
   "license": "MIT",
