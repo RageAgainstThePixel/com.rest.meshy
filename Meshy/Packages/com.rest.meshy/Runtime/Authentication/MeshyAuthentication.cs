@@ -13,7 +13,7 @@ namespace Meshy
         internal const string CONFIG_FILE = ".meshy";
         private const string MESHY_API_KEY = nameof(MESHY_API_KEY);
 
-        public static implicit operator MeshyAuthentication(string apiKey) => new MeshyAuthentication(apiKey);
+        public static implicit operator MeshyAuthentication(string apiKey) => new(apiKey);
 
         /// <summary>
         /// Instantiates an empty Authentication object.

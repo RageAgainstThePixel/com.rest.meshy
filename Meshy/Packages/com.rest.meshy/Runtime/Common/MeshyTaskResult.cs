@@ -202,7 +202,7 @@ namespace Meshy
         {
             if (Thumbnail == null && !string.IsNullOrWhiteSpace(ThumbnailUrl))
             {
-                Thumbnail = await Rest.DownloadTextureAsync(ThumbnailUrl, fileName: $"{Id}.png", debug: enableDebug, cancellationToken: cancellationToken);
+                Thumbnail = await Rest.DownloadTextureAsync(ThumbnailUrl, fileName: $"{Id}.png", parameters: new RestParameters(debug: enableDebug), cancellationToken: cancellationToken);
             }
 
             return Thumbnail;
