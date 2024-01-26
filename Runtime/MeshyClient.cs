@@ -12,6 +12,12 @@ namespace Meshy
 {
     public sealed class MeshyClient : BaseClient<MeshyAuthentication, MeshySettings>
     {
+        /// <inheritdoc />
+        public MeshyClient(MeshyConfiguration configuration)
+            : this(configuration != null ? new MeshyAuthentication(configuration) : null, configuration != null ? new MeshySettings(configuration) : null)
+        {
+        }
+
         /// <summary>
         /// Creates a new client for the Meshy API, handling auth and allowing for access to various API endpoints.
         /// </summary>
@@ -54,7 +60,7 @@ namespace Meshy
 
         public override bool HasValidAuthentication => !string.IsNullOrWhiteSpace(Authentication?.Info?.ApiKey);
 
-        internal static JsonSerializerSettings JsonSerializationOptions { get; } = new JsonSerializerSettings
+        internal static JsonSerializerSettings JsonSerializationOptions { get; } = new()
         {
             DefaultValueHandling = DefaultValueHandling.Ignore,
             NullValueHandling = NullValueHandling.Ignore

@@ -19,9 +19,9 @@ namespace Meshy.Editor
 {
     public class MeshyDashboard : AbstractEditorDashboard
     {
-        private static readonly GUIContent generateContent = new GUIContent("Generate");
-        private static readonly GUIContent generationsContent = new GUIContent("Generations");
-        private static readonly GUIContent dashboardTitleContent = new GUIContent($"{nameof(Meshy)} Dashboard");
+        private static readonly GUIContent generateContent = new("Generate");
+        private static readonly GUIContent generationsContent = new("Generations");
+        private static readonly GUIContent dashboardTitleContent = new($"{nameof(Meshy)} Dashboard");
         private static readonly string[] tabTitles = { "Text to Texture", "Text to 3D", "Image to 3D" };
         private static readonly string authError = $"No valid {nameof(MeshyConfiguration)} was found. This tool requires that you set your API key.";
 
@@ -336,7 +336,7 @@ namespace Meshy.Editor
             isFetchingTextToTextureGenerations = true;
             try
             {
-                textToTextureGenerations = await api.TextToTextureEndpoint.ListTasksAsync(page, limit, SortOrder.Descending);
+                textToTextureGenerations = (await api.TextToTextureEndpoint.ListTasksAsync(page, limit, SortOrder.Descending)).Where(task => task.Status != Status.Expired).ToList();
                 await Task.WhenAll(textToTextureGenerations.Select(task => task.LoadThumbnailAsync())).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -570,7 +570,7 @@ namespace Meshy.Editor
             isFetchingTextTo3DGenerations = true;
             try
             {
-                textTo3DGenerations = await api.TextTo3DEndpoint.ListTasksAsync(page, limit, SortOrder.Descending);
+                textTo3DGenerations = (await api.TextTo3DEndpoint.ListTasksAsync(page, limit, SortOrder.Descending)).Where(task => task.Status != Status.Expired).ToList();
                 await Task.WhenAll(textTo3DGenerations.Select(task => task.LoadThumbnailAsync())).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -753,7 +753,7 @@ namespace Meshy.Editor
 
         private static bool hasFetchedImageTo3DGenerations;
         private static bool isFetchingImageTo3DGenerations;
-        private static List<MeshyTaskResult> imageTo3DGenerations = new List<MeshyTaskResult>();
+        private static List<MeshyTaskResult> imageTo3DGenerations = new();
 
         private static async void FetchImageTo3DGenerations()
         {
@@ -799,7 +799,8 @@ namespace Meshy.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(meshyTask.Id, ExpandWidthOption);
 
-            if (GUILayout.Button(DownloadContent, DefaultColumnWidthOption))
+            if (meshyTask.Status == Status.Succeeded &&
+                GUILayout.Button(DownloadContent, DefaultColumnWidthOption))
             {
                 EditorApplication.delayCall += () =>
                 {
@@ -808,7 +809,6 @@ namespace Meshy.Editor
             }
 
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.BeginHorizontal();
 
             if (meshyTask.Thumbnail != null)
@@ -818,16 +818,14 @@ namespace Meshy.Editor
 
             EditorGUILayout.BeginVertical();
 
-            if (meshyTask.Progress < 100)
+            switch (meshyTask.Status)
             {
-                if (meshyTask.PrecedingTasks.HasValue)
-                {
+                case Status.Pending or Status.InProgress when meshyTask.PrecedingTasks.HasValue:
                     EditorGUILayout.LabelField($"Waiting on {meshyTask.PrecedingTasks} preceding tasks...");
-                }
-                else
-                {
+                    break;
+                case Status.Pending or Status.InProgress:
                     EditorGUILayoutExtensions.DrawProgressBar("Progress", meshyTask.Progress * 0.01f, ExpandWidthOption);
-                }
+                    break;
             }
 
             if (!string.IsNullOrWhiteSpace(meshyTask.ObjectPrompt))
@@ -869,7 +867,7 @@ namespace Meshy.Editor
                     throw new MissingReferenceException("Failed to find a valid model url!");
                 }
 
-                var cachedPath = await Rest.DownloadFileAsync(meshyTask.ModelUrls.Glb, fileName: $"{meshyTask.Id}.glb", debug: false);
+                var cachedPath = await Rest.DownloadFileAsync(meshyTask.ModelUrls.Glb, fileName: $"{meshyTask.Id}.glb");
                 cachedPath = cachedPath.Replace("file://", string.Empty).Replace("/", "\\");
 
                 if (!File.Exists(cachedPath))
