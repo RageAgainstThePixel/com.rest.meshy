@@ -6,6 +6,8 @@ using Meshy.TextToTexture;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Security.Authentication;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Utilities.WebRequestRest;
 
 namespace Meshy
@@ -14,7 +16,9 @@ namespace Meshy
     {
         /// <inheritdoc />
         public MeshyClient(MeshyConfiguration configuration)
-            : this(configuration != null ? new MeshyAuthentication(configuration) : null, configuration != null ? new MeshySettings(configuration) : null)
+            : this(
+                configuration != null ? new MeshyAuthentication(configuration) : null,
+                configuration != null ? new MeshySettings(configuration) : null)
         {
         }
 
@@ -63,7 +67,11 @@ namespace Meshy
         internal static JsonSerializerSettings JsonSerializationOptions { get; } = new()
         {
             DefaultValueHandling = DefaultValueHandling.Ignore,
-            NullValueHandling = NullValueHandling.Ignore
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters = new List<JsonConverter>
+            {
+                new StringEnumConverter(new SnakeCaseNamingStrategy())
+            }
         };
 
         /// <summary>

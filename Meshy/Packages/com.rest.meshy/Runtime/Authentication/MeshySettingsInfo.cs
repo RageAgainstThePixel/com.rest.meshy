@@ -8,12 +8,11 @@ namespace Meshy
     public sealed class MeshySettingsInfo : ISettingsInfo
     {
         internal const string DefaultDomain = "api.meshy.ai";
-        internal const string DefaultVersion = "v1";
 
         public MeshySettingsInfo()
         {
             Domain = DefaultDomain;
-            BaseRequestUrlFormat = $"https://{Domain}/{DefaultVersion}/{{0}}";
+            BaseRequestUrlFormat = $"https://{Domain}/{{0}}";
         }
 
         public MeshySettingsInfo(string domain)
@@ -30,7 +29,7 @@ namespace Meshy
             }
 
             Domain = domain;
-            BaseRequestUrlFormat = $"https://{Domain}/{DefaultVersion}/{{0}}";
+            BaseRequestUrlFormat = $"https://{Domain}/{{0}}";
         }
 
         public string Domain { get; }

@@ -17,7 +17,7 @@ namespace Meshy.Tests
         public async Task Test_01_GetImageTo3DTasks()
         {
             Assert.IsNotNull(MeshyClient.ImageTo3DEndpoint);
-            var imageTo3dTasks = await MeshyClient.ImageTo3DEndpoint.ListTasksAsync();
+            var imageTo3dTasks = await MeshyClient.ImageTo3DEndpoint.ListTasksAsync<ImageTo3DRequest>();
             Assert.IsNotNull(imageTo3dTasks);
 
             foreach (var meshyTask in imageTo3dTasks)

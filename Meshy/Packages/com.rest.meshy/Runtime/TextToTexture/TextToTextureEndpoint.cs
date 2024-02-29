@@ -98,23 +98,19 @@ namespace Meshy.TextToTexture
                     form.AddField("art_style", request.ArtStyle);
                 }
 
-                response = await Rest.PostAsync(GetUrl(), form, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+                response = await Rest.PostAsync(GetEndpointWithVersion<TextToTextureRequest>(), form, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             }
             else
             {
                 var payload = JsonConvert.SerializeObject(request, MeshyClient.JsonSerializationOptions);
-                response = await Rest.PostAsync(GetUrl(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+                response = await Rest.PostAsync(GetEndpointWithVersion<TextToTextureRequest>(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             }
 
             response.Validate(EnableDebug);
             var taskId = JsonConvert.DeserializeObject<TaskResponse>(response.Body, MeshyClient.JsonSerializationOptions)?.Result;
-
-            if (string.IsNullOrWhiteSpace(taskId))
-            {
-                throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}");
-            }
-
-            return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+            return string.IsNullOrWhiteSpace(taskId)
+                ? throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}")
+                : await PollTaskProgressAsync<TextToTextureRequest>(taskId, progress, cancellationToken);
         }
     }
 }
