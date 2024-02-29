@@ -20,14 +20,15 @@ namespace Meshy.TextTo3D
         /// <summary>
         /// Creates a new text to 3d Task.
         /// </summary>
-        /// <param name="request"><see cref="TextTo3DRequest"/>.</param>
+        /// <param name="request">Text to 3d request</param>
         /// <param name="progress">Optional, <see cref="IProgress{TaskProgress}"/> callback.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="MeshyTaskResult"/>.</returns>
-        public async Task<MeshyTaskResult> CreateTextTo3DTaskAsync(TextTo3DRequest request, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
+        public async Task<MeshyTaskResult> CreateTextTo3DTaskAsync<T>(T request, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
+            where T : IMeshyTextTo3DRequest
         {
             var payload = JsonConvert.SerializeObject(request, MeshyClient.JsonSerializationOptions);
-            var response = await Rest.PostAsync(GetUrl(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+            var response = await Rest.PostAsync(GetEndpointWithVersion<T>(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             response.Validate(EnableDebug);
             var taskId = JsonConvert.DeserializeObject<TaskResponse>(response.Body, MeshyClient.JsonSerializationOptions)?.Result;
 
@@ -36,7 +37,7 @@ namespace Meshy.TextTo3D
                 throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}");
             }
 
-            return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+            return await PollTaskProgressAsync<T>(taskId, progress, cancellationToken);
         }
     }
 }

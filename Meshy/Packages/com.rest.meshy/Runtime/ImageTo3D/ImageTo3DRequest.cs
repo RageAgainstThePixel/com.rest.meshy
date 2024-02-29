@@ -7,7 +7,7 @@ using UnityEngine.Scripting;
 namespace Meshy.ImageTo3D
 {
     [Preserve]
-    public sealed class ImageTo3DRequest
+    public sealed class ImageTo3DRequest : IMeshyTaskRequest
     {
         [Preserve]
         public ImageTo3DRequest(Texture2D image, bool? enablePBR = true)
