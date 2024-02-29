@@ -8,7 +8,7 @@ using UnityEngine.Scripting;
 namespace Meshy.TextToTexture
 {
     [Preserve]
-    public sealed class TextToTextureRequest
+    public sealed class TextToTextureRequest : IMeshyTaskRequest
     {
         [Preserve]
         public TextToTextureRequest(

@@ -1,10 +1,13 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Meshy.TextTo3D;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine.Networking;
 using Utilities.WebRequestRest;
 
 namespace Meshy
@@ -18,15 +21,47 @@ namespace Meshy
         /// </summary>
         public int PollingIntervalMilliseconds { get; set; } = 500;
 
+        internal string GetEndpointWithVersion<T>(string endpoint = "", Dictionary<string, string> queryParameters = null)
+            where T : IMeshyTaskRequest
+        {
+            string version;
+
+            if (typeof(T).IsAssignableFrom(typeof(TextTo3DBetaPreviewRequest)) ||
+                typeof(T).IsAssignableFrom(typeof(TextTo3DBetaRefineRequest)))
+            {
+                version = "v2";
+            }
+            else
+            {
+                version = "v1";
+            }
+
+            return GetUrl($"{version}/{Root}{endpoint}", queryParameters);
+        }
+
+        protected override string GetUrl(string endpoint = "", Dictionary<string, string> queryParameters = null)
+        {
+            var result = string.Format(client.Settings.BaseRequestUrlFormat, endpoint);
+
+            if (queryParameters is { Count: not 0 })
+            {
+                result += $"?{string.Join("&", queryParameters.Select(parameter => $"{UnityWebRequest.EscapeURL(parameter.Key)}={UnityWebRequest.EscapeURL(parameter.Value)}"))}";
+            }
+
+            return result;
+        }
+
         /// <summary>
-        /// List all of the tasks for this endpoint.
+        /// List all the tasks for this endpoint by task type.
         /// </summary>
+        /// <typeparam name="T">The <see cref="IMeshyTaskRequest"/> to filter by.</typeparam>
         /// <param name="pageNumber">Optional, page number.</param>
         /// <param name="pageSize">Optional, number of items per page.</param>
         /// <param name="order">Optional, <see cref="SortOrder"/>.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="IReadOnlyList{MeshyTaskResult}"/>.</returns>
-        public async Task<IReadOnlyList<MeshyTaskResult>> ListTasksAsync(int? pageNumber = null, int? pageSize = null, SortOrder? order = null, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<MeshyTaskResult>> ListTasksAsync<T>(int? pageNumber = null, int? pageSize = null, SortOrder? order = null, CancellationToken cancellationToken = default)
+            where T : IMeshyTaskRequest
         {
             var query = new Dictionary<string, string>();
 
@@ -53,7 +88,7 @@ namespace Meshy
                 }
             }
 
-            var response = await Rest.GetAsync(GetUrl(queryParameters: query), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+            var response = await Rest.GetAsync(GetEndpointWithVersion<T>(queryParameters: query), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             response.Validate(EnableDebug);
             return JsonConvert.DeserializeObject<IReadOnlyList<MeshyTaskResult>>(response.Body, MeshyClient.JsonSerializationOptions);
         }
@@ -61,12 +96,13 @@ namespace Meshy
         /// <summary>
         /// Retrieve a task by its id.
         /// </summary>
-        /// <param name="taskId">Id of the task.</param>
+        /// <param name="taskId">The id of the task.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="MeshyTaskResult"/></returns>
-        public async Task<MeshyTaskResult> RetrieveTaskAsync(string taskId, CancellationToken cancellationToken = default)
+        public async Task<MeshyTaskResult> RetrieveTaskAsync<T>(string taskId, CancellationToken cancellationToken = default)
+            where T : IMeshyTaskRequest
         {
-            var response = await Rest.GetAsync(GetUrl($"/{taskId}"), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+            var response = await Rest.GetAsync(GetEndpointWithVersion<T>($"/{taskId}"), new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             response.Validate(EnableDebug);
             return JsonConvert.DeserializeObject<MeshyTaskResult>(response.Body, MeshyClient.JsonSerializationOptions);
         }
@@ -78,11 +114,12 @@ namespace Meshy
         /// <param name="progress">Optional, <see cref="IProgress{TaskProgress}"/>.</param>
         /// <param name="cancellationToken">Optional, <see cref="CancellationToken"/>.</param>
         /// <returns><see cref="MeshyTaskResult"/>.</returns>
-        internal async Task<MeshyTaskResult> PollTaskProgressAsync(string taskId, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
+        internal async Task<MeshyTaskResult> PollTaskProgressAsync<T>(string taskId, IProgress<TaskProgress> progress = null, CancellationToken cancellationToken = default)
+            where T : IMeshyTaskRequest
         {
             try
             {
-                var taskResult = await RetrieveTaskAsync(taskId, cancellationToken);
+                var taskResult = await RetrieveTaskAsync<T>(taskId, cancellationToken);
 
                 if (taskResult == null)
                 {
@@ -96,7 +133,7 @@ namespace Meshy
                     case Status.Pending:
                     case Status.InProgress:
                         await Task.Delay(PollingIntervalMilliseconds, cancellationToken).ConfigureAwait(true);
-                        return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+                        return await PollTaskProgressAsync<T>(taskId, progress, cancellationToken);
                     case Status.Succeeded:
                     case Status.Failed:
                     case Status.Expired:
@@ -110,7 +147,7 @@ namespace Meshy
                 if (restEx.Response.Code == 429)
                 {
                     await Task.Delay(PollingIntervalMilliseconds * 2, cancellationToken).ConfigureAwait(true);
-                    return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+                    return await PollTaskProgressAsync<T>(taskId, progress, cancellationToken);
                 }
 
                 throw;

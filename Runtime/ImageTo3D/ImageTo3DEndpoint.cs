@@ -33,7 +33,7 @@ namespace Meshy.ImageTo3D
             if (request.Image == null)
             {
                 var payload = JsonConvert.SerializeObject(request, MeshyClient.JsonSerializationOptions);
-                response = await Rest.PostAsync(GetUrl(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+                response = await Rest.PostAsync(GetEndpointWithVersion<ImageTo3DRequest>(), payload, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             }
             else
             {
@@ -45,7 +45,7 @@ namespace Meshy.ImageTo3D
                     form.AddField("enable_pbr", request.EnablePBR.Value.ToString());
                 }
 
-                response = await Rest.PostAsync(GetUrl(), form, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
+                response = await Rest.PostAsync(GetEndpointWithVersion<ImageTo3DRequest>(), form, new RestParameters(client.DefaultRequestHeaders), cancellationToken);
             }
 
             response.Validate(EnableDebug);
@@ -56,7 +56,7 @@ namespace Meshy.ImageTo3D
                 throw new Exception($"Failed to get a valid {nameof(taskId)}! \n{response.Body}");
             }
 
-            return await PollTaskProgressAsync(taskId, progress, cancellationToken);
+            return await PollTaskProgressAsync<ImageTo3DRequest>(taskId, progress, cancellationToken);
         }
     }
 }

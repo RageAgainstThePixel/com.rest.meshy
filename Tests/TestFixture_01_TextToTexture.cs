@@ -19,7 +19,7 @@ namespace Meshy.Tests
         public async Task Test_01_GetTextToTextureTasks()
         {
             Assert.IsNotNull(MeshyClient.TextToTextureEndpoint);
-            var textToTextureTasks = await MeshyClient.TextToTextureEndpoint.ListTasksAsync(1, 12, SortOrder.Ascending);
+            var textToTextureTasks = await MeshyClient.TextToTextureEndpoint.ListTasksAsync<TextToTextureRequest>(1, 12, SortOrder.Ascending);
             Assert.IsNotNull(textToTextureTasks);
 
             foreach (var meshyTask in textToTextureTasks)

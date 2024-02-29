@@ -47,7 +47,11 @@ namespace Meshy
         /// </summary>
         public const string OrientalComicInk = "oriental-comic-ink";
 
-        internal static readonly string[] TextToImageArtStyles =
+        public const string Cartoon = "cartoon";
+
+        public const string LowPoly = "low-poly";
+
+        internal static readonly string[] TextToTextureV1ArtStyles =
         {
             Realistic,
             Fake3DCartoon,
@@ -58,7 +62,14 @@ namespace Meshy
             OrientalComicInk
         };
 
-        internal static readonly string[] TextTo3DArtStyles =
+        internal static readonly string[] TextTo3DV2ArtStyles =
+        {
+            Realistic,
+            Cartoon,
+            LowPoly
+        };
+
+        internal static readonly string[] TextTo3DV1ArtStyles =
         {
             Realistic,
             Voxel,

@@ -13,11 +13,15 @@ namespace Meshy
         public ModelUrls(
             [JsonProperty("glb")] string glb,
             [JsonProperty("fbx")] string fbx,
-            [JsonProperty("usdz")] string usdz)
+            [JsonProperty("usdz")] string usdz,
+            [JsonProperty("obj")] string obj,
+            [JsonProperty("mtl")] string mtl)
         {
             Glb = glb;
             Fbx = fbx;
             Usdz = usdz;
+            Obj = obj;
+            Mtl = mtl;
         }
 
         /// <summary>
@@ -40,5 +44,19 @@ namespace Meshy
         [Preserve]
         [JsonProperty("usdz")]
         public string Usdz { get; }
+
+        /// <summary>
+        /// Downloadable URL to the Obj file.
+        /// </summary>
+        [Preserve]
+        [JsonProperty("obj")]
+        public string Obj { get; }
+
+        /// <summary>
+        /// Downloadable URL to the Mtl file.
+        /// </summary>
+        [Preserve]
+        [JsonProperty("mtl")]
+        public string Mtl { get; }
     }
 }
